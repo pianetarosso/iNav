@@ -1,6 +1,5 @@
 package it.inav.database;
 
-import it.inav.base_objects.BuildAndFind;
 import it.inav.base_objects.Building;
 import it.inav.base_objects.Floor;
 import it.inav.base_objects.Path;
@@ -277,11 +276,11 @@ public class InitializeDB {
 	// recupera un edificio specifico (tramite il suo id)
 	public Building fetchBuilding(long id) {
 		Building b = buildings.fetchBuilding(id);
-		b.setFloors(floors.fetchfloors(id));
+	/*	b.setFloors(floors.fetchfloors(id));
 		b.setPoints(points.fetchPoints(id));
 		b.setPaths(paths.fetchAllPaths(id));
 		b.setRooms(rooms.fetchRooms(id));
-		return b;
+	*/	return b;
 	}
 
 	// recupero i piani di un edificio
@@ -321,7 +320,7 @@ public class InitializeDB {
 		}
 		
 		// creo l'edificio
-		if (!createBuilding(b.id, b.nome, b.latitudine, b.longitudine, 
+	/*	if (!createBuilding(b.id, b.nome, b.latitudine, b.longitudine, 
 				b.numero_di_piani, b.versione)) {
 					Log.e(DATABASE_NAME, "Cannot create building: "+b.id);
 					return null;
@@ -341,7 +340,7 @@ public class InitializeDB {
 		// creo i punti
 		for(int i=0; i < p.size(); i++) {
 				Point p1 = p.get(i);
-				long new_id = createPoint(b.id, p1.RFID, p1.posizione, p1.piano, p1.via_accesso);
+				long new_id = 0;//createPoint(b.id, p1.RFID, p1.posizione, p1.piano, p1.via_accesso);
 				if (new_id < 0) {
 					Log.e(DATABASE_NAME, "Error save points: "+b.id+", element: "+ i);
 					return null;
@@ -371,13 +370,13 @@ public class InitializeDB {
 				return null;
 			}
 		}
-		
+		*/
 		// aggiorno l'edificio
-		b.setFloors(f);
+	/*	b.setFloors(f);
 		b.setPoints(p);
 		b.setPaths(pt);
 		b.setRooms(r);
-		
+		*/
 		return b;
     }	
 }

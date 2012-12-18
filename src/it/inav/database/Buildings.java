@@ -109,12 +109,12 @@ public class Buildings {
 		location.setLatitude(latitude/1E6);
 		location.setLongitude(longitude/1E6);
 	
-		for (int i=0; i < buildings.size(); i++) {
+		/*for (int i=0; i < buildings.size(); i++) {
 			if (Math.abs(location.distanceTo(buildings.get(i).location)) > distance * 1000) 
 				buildings.remove(i);
 				i--;
 		}
-		
+		*/
 		return buildings;
 	}
 	
@@ -149,13 +149,14 @@ public class Buildings {
 	
 	// CREAZIONE DI UN SOLO BUILDING
 	private Building cursorTobuilding(Cursor cursor) {
-		return new Building(
+/*		return new Building(
 				cursor.getLong(cursor.getColumnIndex(colBuildingId)),
 				cursor.getString(cursor.getColumnIndex(colBuildingName)),
 				cursor.getInt(cursor.getColumnIndex(colBuildingLatitude)),
 				cursor.getInt(cursor.getColumnIndex(colBuildingLongitude)),
 				cursor.getInt(cursor.getColumnIndex(colBuildingNumberOfFloors)),
 				cursor.getInt(cursor.getColumnIndex(colBuildingVersion))
-				);
+				);*/ return null;
 	}
+	
 }

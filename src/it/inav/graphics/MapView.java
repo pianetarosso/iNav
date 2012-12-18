@@ -25,7 +25,6 @@ public class MapView extends View {
 	private InputStream is;
 	private Picture p;
 	Drawable bd;
-	Matrix matrix;
 
 	public MapView(Context context) {
 		super(context);
@@ -63,8 +62,6 @@ public class MapView extends View {
 		circlePaint.setStyle(Paint.Style.FILL_AND_STROKE);		
 		markerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		markerPaint.setColor(Color.RED);
-		matrix = new Matrix();
-
 	}
 
 	@Override
@@ -76,24 +73,14 @@ public class MapView extends View {
 		canvas.drawCircle(px, py, radius, circlePaint);
 		
 		
+		Matrix matrix = new Matrix();
 		
-		
-		//Matrix mnew = matrix;
-		//matrix.postTranslate(dx, dy);
-		//Log.i("effective_rotation", ""+bearing);
-		//Log.i("effective_rotation?", ""+this.bearing);
-		matrix.postRotate( bearing, bmp.getWidth(), bmp.getHeight() );
-		//Bitmap rotatedBitmap = Bitmap.createBitmap( bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true );
-		//canvas.setBitmap(rotatedBitmap);
-	    
-		//p.draw(canvas);
-		//canvas.drawPicture(p);
+		// i punti sono le coordinate su cui si applica la rotazione
+		matrix.postRotate( bearing, bmp.getWidth()/2, bmp.getHeight()/2 );
 		
 		
 		canvas.drawBitmap(bmp, matrix, null);
-	//	rotatedBitmap.recycle();
-		// Rotate our perspective so that the ‘top’ is
-		// facing the current bearing.
+	
 		canvas.save();
 		canvas.rotate(-bearing, px, py);
 
@@ -139,11 +126,11 @@ public class MapView extends View {
 	}
 
 	public void setBearing(float _bearing) {
-		if (_bearing < 0) 
-		    bearing = _bearing + 360;
-		else
+		//if (_bearing < 0) 
+		//    bearing = _bearing + 360;
+		//else
 			bearing = _bearing;
-		Log.i("bearing", ""+bearing);
+	//	Log.i("bearing", ""+bearing);
 	}
 	
 	public float getBearing() {

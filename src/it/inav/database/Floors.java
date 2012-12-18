@@ -97,12 +97,13 @@ public class Floors {
 	}
 	
 	private Floor cursorTofloor(Cursor cursor) {
-		return new Floor(
+		/*return new Floor(
 				cursor.getLong(cursor.getColumnIndex(colFloorId)),
 				cursor.getString(cursor.getColumnIndex(colFloorLink)),
 				Double.parseDouble(cursor.getString(cursor.getColumnIndex(colFloorBearing))),
 				cursor.getInt(cursor.getColumnIndex(colFloorNumber))
-				);
+				);*/
+		return null;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////	
 	

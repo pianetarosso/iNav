@@ -113,15 +113,15 @@ private SQLiteDatabase mDb;
 	}
 	
 	private Path cursorTopath(Cursor cursor) {
-		return new Path(
+		return null/*new Path(
 				cursor.getInt(cursor.getColumnIndex(colPathCost)),
 				convertBoolean(cursor.getInt(cursor.getColumnIndex(colPathElevator))),
 				convertBoolean(cursor.getInt(cursor.getColumnIndex(colPathStair))),
 				cursor.getLong(cursor.getColumnIndex(colPathReferencePointA)),
 				cursor.getLong(cursor.getColumnIndex(colPathReferencePointB))
-				);
+				)*/;
 	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////	
+	///////////////////////*/////////////////////////////////////////////////////////////////////////////	
 	
 	
 	// METODI VARI PER RENDERE I VALORI ACCETTABILI DA DATABASE E IN USCITA //////////////////////////////

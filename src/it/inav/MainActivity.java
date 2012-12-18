@@ -1,5 +1,12 @@
 package it.inav;
 
+import java.io.IOException;
+import java.text.ParseException;
+
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONException;
+
+import it.inav.communications.Initialize;
 import it.inav.graphics.MapView;
 import it.inav.sensors.Compass;
 import android.app.Activity;
@@ -32,8 +39,23 @@ public class MainActivity extends Activity {
         
         new Compass(this, cv, debug);
         
-        
+        try {
+			Initialize.getBuildingFromId(6);
+		} catch (ClientProtocolException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
       //  cv.setBearing(37);
+ catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override

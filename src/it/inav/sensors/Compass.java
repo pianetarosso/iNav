@@ -130,7 +130,7 @@ public class Compass {
 		// ASSE Y roll
 		values[2] = (float) Math.toDegrees(values[2]);
 		
-		Log.i("compass", ""+values[0]);
+		//Log.i("compass", ""+values[0]);
 		 
 		cv.setBearing(values[0]);		
 		

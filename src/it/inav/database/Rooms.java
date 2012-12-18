@@ -110,7 +110,7 @@ public class Rooms {
 	}
 	
 	private Room cursorToRoom(Cursor cursor) {
-		return new Room(
+		return null/*new Room(
 				cursor.getLong(cursor.getColumnIndex(colRoomId)),
 				cursor.getLong(cursor.getColumnIndex(colRoomReferencePoint)),
 				cursor.getInt(cursor.getColumnIndex(colRoomFloor)),
@@ -118,7 +118,7 @@ public class Rooms {
 				cursor.getString(cursor.getColumnIndex(colRoomRoomName)),
 				convertArray(cursor.getString(cursor.getColumnIndex(colRoomPeople))),
 				cursor.getString(cursor.getColumnIndex(colRoomOther))
-				);
+				)*/;
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////	
 	

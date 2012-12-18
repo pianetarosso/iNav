@@ -1,48 +1,93 @@
 package it.inav.base_objects;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class Room {
 
-	public long id;
 	public Point punto;
-	public int piano;
-	public String link;
 	public String nome_stanza;
 	public List<String> persone;
 	public String altro;
-	public long point_id;
+	public URL link = null;
 	
-	public Room(long id, long id_punto, int piano,
-			String link, String nome_stanza, 
-			String[] persone, String altro) {
+	private static final String peopleExpression ="[\\s[a-z][A-Z]]\\,[\\s[a-z][A-Z]]";
+	
+	public Room(long punto, String nome_stanza, String persone, 
+				String altro, String link, List<Point> points) throws MalformedURLException {
 		
-		this.id = id;
-		this.piano = piano;
-		this.link = link;
+		if (link.length() > 0)
+			this.link = new URL(link);
+		
 		this.nome_stanza = nome_stanza;
-		this.persone = createListOfPeople(persone);
 		this.altro = altro;
-		this.point_id = id_punto;
+		
+		this.persone = new ArrayList<String>();
+		String[] p_temp = persone.split(peopleExpression);
+		for(String s : p_temp)
+			this.persone.add(s);
+		
+		for(Point p : points)
+			if (p.id == punto) {
+				this.punto = p;
+				p.stanza = this;
+				break;
+			}
+		
 	}	
 	
-	public void setPoint(Point p) {
-		this.punto = p;
+	/*
+	 			'punto' : r.punto.pk,
+                'nome_stanza' : r.nome_stanza,
+                'persone' : r.persone,
+                'altro' : r.altro,
+                'link' : r.link
+	 */
+
+	private static final String PUNTO = "punto";
+	private static final String NOME_STANZA = "nome_stanza";
+	private static final String PERSONE = "persone";
+	private static final String ALTRO = "altro";
+	private static final String LINK = "link";
+	
+	public static Room parse(JSONObject r, List<Point> punti) throws JSONException, MalformedURLException {
+		
+		long punto = r.getLong(PUNTO);
+		String nome_stanza = r.getString(NOME_STANZA);
+		String persone = r.getString(PERSONE);
+		String altro = r.getString(ALTRO);
+		String link = r.getString(LINK);
+		
+		return new Room(punto, nome_stanza, persone, altro, link, punti);
 	}
 	
-	private List<String> createListOfPeople(String[] lista) {
+	public String toString() {
 		
-		List <String> p = new ArrayList<String>();
+		String out = "Room:\n";
 		
-		for(int i=0; i< lista.length; i++) 
-			p.add(lista[i]);
+		out += "punto:"+punto.id;
+		out += ", nome della stanza:"+nome_stanza;
+		out += ", altro:"+altro;
 		
-		return p;
+		if (link != null)
+			out += ", link:"+link.toString();
+		
+		out += ", persone: {";
+		for(String p : persone)
+			out += p +", ";
+		
+		if (persone.size() > 0)
+			out = out.substring(0, out.length() -2);
+		
+		out += "}\n";
+				
+		return out;
 	}
 	
-	public void setId(long id) {
-		this.id = id;
-	}
 }
