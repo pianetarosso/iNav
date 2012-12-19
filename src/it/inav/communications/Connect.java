@@ -1,5 +1,6 @@
 package it.inav.communications;
 
+import it.inav.Memory.Save;
 import it.inav.base_objects.Building;
 import it.inav.base_objects.Floor;
 
@@ -15,6 +16,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -68,14 +70,11 @@ public class Connect {
 	// funzione per scaricare le immagini da un link
 	private static Bitmap downloadImage(URI foto_link) throws IOException {
 		
-		
 		// Open a connection to that URL. 
 		URLConnection connection = foto_link.toURL().openConnection();
-		
 		connection.connect();
 		
 		BufferedInputStream bis = new BufferedInputStream(connection.getInputStream());
-		
 		Bitmap b = BitmapFactory.decodeStream(bis);
 		
 		bis.close();
@@ -84,6 +83,15 @@ public class Connect {
 	}
 	
 	
+	// metodo statico, per lo scaricamento di un Building dal sito
+	public static Building downloadBuilding(long id, Context context) 
+			throws ClientProtocolException, IOException, JSONException, ParseException, URISyntaxException {
+		Building b = Connect.getBuildingFromId(id);
+		Connect.getImages(b);
+		Save.SaveBuilding(b, context);
+		return b;
+	}
+
 	
 	
 }

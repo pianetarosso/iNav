@@ -63,7 +63,6 @@ public class Save {
 			
 		}
 		
-		
 		InitializeDB idb = new InitializeDB(context);
         idb.open();
         idb.createBuilding(b);

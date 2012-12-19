@@ -1,5 +1,7 @@
 package it.inav.base_objects;
 
+import it.inav.database.InitializeDB;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -9,13 +11,17 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.database.SQLException;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 
 import com.google.android.maps.GeoPoint;
 
@@ -74,11 +80,6 @@ public class Building {
 	@SuppressLint("SimpleDateFormat")
 	SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 
-	private static final String regexprPosition = "\\[[0-9],[0-9]\\]";
-	private static final String regexprGeom ="\\[*"+regexprPosition+",\\]";
-
-
-
 	// COSTRUTTORE STANDARD
 	public Building (long id, String nome, String descrizione, String link, String foto_link,
 			int numero_di_piani, int versione, long data_creazione,
@@ -104,17 +105,81 @@ public class Building {
 		this.data_update = new Date();
 		this.data_update.setTime(data_update);
 
-		String[] p = posizione.split(regexprPosition);
+		String[] p = posizione.substring(1, posizione.length() -1).split(",");
 		this.posizione = new GeoPoint(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
 		
-		String[] g = geometria.split(regexprGeom);
-		this.geometria = new GeoPoint[g.length/2];
+		String[] g = geometria.substring(1, geometria.length() -1).split("\\[|\\],\\[|\\]");
 		
-		for(int i=0; i < g.length; i++)
-			this.geometria[i] = new GeoPoint(Integer.parseInt(g[i]), Integer.parseInt(g[i++]));
+		int counter = 0;
+		
+		for (String gi : g)
+			if (gi.length() > 5)
+				counter++;
+		
+		this.geometria = new GeoPoint[counter];
+		
+		counter = 0;
+		for(String gi : g) {
+			if (gi.length() > 10) {
+				p = gi.split(",");
+				this.geometria[counter] = new GeoPoint(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
+				counter++;
+			}
+		}
 	}
 
+	// Metodo per recuperare il building dal database
+	public static Building getBuilding(Context context, long id) 
+			throws SQLException, MalformedURLException, URISyntaxException {
+		
+		Building b = null;
+		
+		InitializeDB idb = new InitializeDB(context);
+        idb.open();
+        
+        
+        if (idb.existBuilding(id));
+        	 b = idb.fetchBuilding(id);
+        	
+        idb.close();
+		
+        return b;
+	}
+	
+	// Metodo per recuperare TUTTI i building dal database
+	public static List<Building> getBuildings(Context context) 
+			throws SQLException, MalformedURLException, URISyntaxException, 
+			InterruptedException, ExecutionException {
+		
+		loadAllBuildings lab = new loadAllBuildings();
+		lab.execute(context);
+		
+        return lab.get();	
+	}
+	
+	public static class loadAllBuildings extends AsyncTask <Context, Void, List<Building>> {
 
+		@Override
+		protected List<Building> doInBackground(Context... params) {
+			List<Building> b = new ArrayList<Building>();
+			
+			InitializeDB idb = new InitializeDB(params[0]);
+	        idb.open();
+	        
+	        try {
+				b = idb.fetchBuildings();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			} 
+	        	
+	        idb.close();
+	        
+			return b;
+		}
+		
+	}
+	
 	// Costruttore che esegue il parsing di un JSON
 	public Building (JSONObject json, String baseLink) 
 			throws JSONException, MalformedURLException, ParseException, URISyntaxException {
@@ -173,7 +238,7 @@ public class Building {
 
 		String foto_link = b.getString(FOTO);
 		if (foto_link.length() > 0)
-			this.foto_link = new URI(baseLink + link);
+			this.foto_link = new URI(baseLink.substring(0, baseLink.length() - 1) + foto_link);
 
 		this.numero_di_piani = b.getInt(NUMERO_DI_PIANI);
 		this.versione = b.getInt(VERSIONE);
@@ -198,9 +263,6 @@ public class Building {
 			this.geometria[i] = t_g;
 		}
 	}
-
-
-
 
 
 

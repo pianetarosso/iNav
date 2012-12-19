@@ -61,11 +61,6 @@ public class Floors {
 		return mDb.insert(Building.FLOORS_TAG, null, initialValues);
 	}
 
-	// CANCELLA UN PIANO
-	protected boolean deletefloor(long id) {
-		return mDb.delete(Building.FLOORS_TAG, Floor.ID + "=" + id, null) > 0;
-	}
-
 	// CANCELLO TUTTI I PIANI DI UN EDIFICIO
 	protected boolean deleteAllFloors(long id) {
 		return mDb.delete(Building.FLOORS_TAG, Building.BUILDING_TAG + "=" + id, null) > 0;

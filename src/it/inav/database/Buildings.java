@@ -92,7 +92,7 @@ public class Buildings {
 		String out = "[";
 		for(GeoPoint gp : geometria)
 			out += "["+gp.getLatitudeE6()+","+gp.getLongitudeE6()+"],";
-		out += ']';
+		out = out.substring(0, out.length() - 1) + ']';
 		
 		initialValues.put(Building.GEOMETRIA, out);
 

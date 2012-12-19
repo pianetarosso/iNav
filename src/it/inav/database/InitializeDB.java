@@ -207,6 +207,7 @@ public class InitializeDB {
 		// OPEN DATABASE --------------------------------------------------------------------
 		public InitializeDB open() throws SQLException {
 			Log.i(DATABASE_NAME, "OPening DataBase Connection....");
+			
 			mDbHelper = new DatabaseHelper(mCtx);
 			mDb = mDbHelper.getWritableDatabase();
 			
@@ -232,7 +233,7 @@ public class InitializeDB {
 	public boolean createBuilding(Building b) {
 		
 		deleteBuilding(b.id);
-		
+	
 		return buildings.createBuilding(b.id, b.nome, b.posizione, b.descrizione, b.data_creazione,
 				b.data_update, b.link, b.numero_di_piani, 
 				b.versione, b.foto_link, b.geometria) > -1;

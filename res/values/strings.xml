@@ -4,5 +4,7 @@
     <string name="app_name">iNav</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
-
+    <string name="no_buildings">Nessun edificio salvato</string>
+    <string name="no_connection">Nessuna connessione attiva,\n alcune funzionalità saranno disabilitate.</string>
+    <string name="select_building">Seleziona l\'edificio:</string>
 </resources>
