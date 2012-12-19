@@ -1,6 +1,8 @@
 package it.inav.base_objects;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,8 +48,8 @@ public class Building {
 	public String nome;
 	public String descrizione;
 
-	public URL link;
-	public URL foto_link = null;
+	public URL link = null;
+	public URI foto_link = null;
 
 	public Bitmap foto;
 
@@ -81,14 +83,17 @@ public class Building {
 	public Building (long id, String nome, String descrizione, String link, String foto_link,
 			int numero_di_piani, int versione, long data_creazione,
 			long data_update, String posizione, String geometria) 
-					throws MalformedURLException {
+					throws MalformedURLException, URISyntaxException {
 
 		this.id = id;
 		this.nome = nome;
 		this.descrizione = descrizione;
 
-		this.link = new URL(link);
-		this.foto_link = new URL(foto_link);
+		if (link.length() > 0)
+			this.link = new URL(link);
+		
+		if (link.length() > 0)
+			this.foto_link = new URI(foto_link);
 
 		this.numero_di_piani = numero_di_piani;
 		this.versione = versione;
@@ -112,7 +117,7 @@ public class Building {
 
 	// Costruttore che esegue il parsing di un JSON
 	public Building (JSONObject json, String baseLink) 
-			throws JSONException, MalformedURLException, ParseException {
+			throws JSONException, MalformedURLException, ParseException, URISyntaxException {
 
 		// carico i valori del building
 		JSONObject b = json.getJSONObject(BUILDING_TAG);
@@ -141,7 +146,8 @@ public class Building {
 
 	private static final String LIST = "lista";
 
-	public static List<Building> Buildings(JSONObject json, String baseLink) throws MalformedURLException, JSONException, ParseException {
+	public static List<Building> Buildings(JSONObject json, String baseLink) 
+			throws MalformedURLException, JSONException, ParseException, URISyntaxException {
 
 		List <Building> b = new ArrayList<Building>();
 		JSONArray array = (JSONArray) json.get(LIST);
@@ -155,7 +161,7 @@ public class Building {
 	
 	// PARSING DEL JSON
 	private void parseBuilding(JSONObject b, String baseLink) 
-			throws JSONException, MalformedURLException, ParseException {
+			throws JSONException, MalformedURLException, ParseException, URISyntaxException {
 
 		this.id = b.getLong(ID);
 		this.nome = b.getString(NOME);
@@ -167,7 +173,7 @@ public class Building {
 
 		String foto_link = b.getString(FOTO);
 		if (foto_link.length() > 0)
-			this.foto_link = new URL(baseLink + link);
+			this.foto_link = new URI(baseLink + link);
 
 		this.numero_di_piani = b.getInt(NUMERO_DI_PIANI);
 		this.versione = b.getInt(VERSIONE);

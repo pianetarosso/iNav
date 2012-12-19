@@ -5,7 +5,8 @@ import it.inav.base_objects.Floor;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.text.ParseException;
 import java.util.List;
@@ -26,7 +27,7 @@ public class Connect {
 
 	// METODI ESPOSTI PER IL GET DEL/DEI BUILDING/S
 	public static Building getBuildingFromId(long id) 
-			throws ClientProtocolException, IOException, JSONException, ParseException {
+			throws ClientProtocolException, IOException, JSONException, ParseException, URISyntaxException {
 		
 		String url = getBuildingURL(id, "0", "0", -1);
 		JSONObject json = JSONParser.getJSONFromUrl(url);
@@ -34,7 +35,7 @@ public class Connect {
 	}
 	
 	public static List<Building> getBuildingsInRadius(String latitude, String longitude, int radius) 
-			throws ClientProtocolException, IOException, JSONException, ParseException {
+			throws ClientProtocolException, IOException, JSONException, ParseException, URISyntaxException {
 		
 		String url = getBuildingURL(-1, latitude, longitude, radius);
 		JSONObject json = JSONParser.getJSONFromUrl(url);
@@ -65,11 +66,11 @@ public class Connect {
 	
 	
 	// funzione per scaricare le immagini da un link
-	private static Bitmap downloadImage(URL url) throws IOException {
+	private static Bitmap downloadImage(URI foto_link) throws IOException {
 		
 		
 		// Open a connection to that URL. 
-		URLConnection connection = url.openConnection();
+		URLConnection connection = foto_link.toURL().openConnection();
 		
 		connection.connect();
 		

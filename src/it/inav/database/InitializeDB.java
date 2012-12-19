@@ -7,6 +7,7 @@ import it.inav.base_objects.Point;
 import it.inav.base_objects.Room;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import android.content.Context;
@@ -229,9 +230,12 @@ public class InitializeDB {
 		
 	// Crea un edificio
 	public boolean createBuilding(Building b) {
+		
+		deleteBuilding(b.id);
+		
 		return buildings.createBuilding(b.id, b.nome, b.posizione, b.descrizione, b.data_creazione,
-				b.data_update, b.link.toString(), b.numero_di_piani, 
-				b.versione, b.foto_link.toString(), b.geometria) > -1;
+				b.data_update, b.link, b.numero_di_piani, 
+				b.versione, b.foto_link, b.geometria) > -1;
 	}
 	
 	// Crea un punto
@@ -273,17 +277,20 @@ public class InitializeDB {
 	// FETCH//////////////////////////////////////////////////////////////////////////////////////
 	
 	// recupera tutti gli edifici
-	public List<Building> fetchBuildings() throws SQLException, MalformedURLException {
+	public List<Building> fetchBuildings() 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		return buildings.fetchBuilding();
 	}
 	
 	// verifico se un edificio è presente nel datatbase (tramite il suo id)
-	public boolean existBuilding(long id) throws SQLException, MalformedURLException {
+	public boolean existBuilding(long id) 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		return buildings.fetchBuilding(id) != null;
 	}
 	
 	// recupera un edificio specifico (tramite il suo id)
-	public Building fetchBuilding(long id) throws SQLException, MalformedURLException {
+	public Building fetchBuilding(long id) 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		Building b = buildings.fetchBuilding(id);
 		b.setPunti(points.fetchPoints(id));
 		b.setPiani(floors.fetchFloors(id, b.getPunti()));
@@ -313,7 +320,8 @@ public class InitializeDB {
 	}
 	
 	// UPDATE/CREAZIONE DI UN EDIFICIO////////////////////////////////////////////////
-	public Building generateBuilding(Building b) throws SQLException, MalformedURLException {		
+	public Building generateBuilding(Building b) 
+			throws SQLException, MalformedURLException, URISyntaxException {		
 		
 		List<Floor> floor = b.getPiani();
 		List<Point> point = b.getPunti();

@@ -1,7 +1,7 @@
 package it.inav.base_objects;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,7 +29,7 @@ public class Floor {
 	public double bearing;
 
 	public Bitmap immagine;
-	public URL link_immagine;
+	public URI link_immagine;
 	////////////////////////////
 	
 	// OGGETTI ////////////////
@@ -39,9 +39,9 @@ public class Floor {
 
 	// COSTRUTTORE
 	public Floor(long id, String link_immagine, double bearing, int numero_di_piano, 
-			String descrizione, List<Point> punti) throws MalformedURLException {
+			String descrizione, List<Point> punti) throws URISyntaxException {
 		this.id = id;
-		this.link_immagine = new URL(link_immagine);
+		this.link_immagine = new URI(link_immagine);
 		this.bearing = bearing;
 		this.numero_di_piano = numero_di_piano;
 		this.descrizione = descrizione;
@@ -57,7 +57,7 @@ public class Floor {
 	
 	// PARSING DA JSON
 	public static Floor parse(JSONObject f, String baseLink, List<Point> punti) 
-			throws JSONException, MalformedURLException {
+			throws JSONException, URISyntaxException {
 
 		long id = f.getLong(ID);
 		int numero_di_piano = f.getInt(NUMERO_DI_PIANO);

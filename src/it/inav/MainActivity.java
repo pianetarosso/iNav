@@ -1,12 +1,13 @@
 package it.inav;
 
+import it.inav.Memory.Save;
 import it.inav.base_objects.Building;
 import it.inav.communications.Connect;
-import it.inav.database.InitializeDB;
 import it.inav.graphics.MapView;
 import it.inav.sensors.Compass;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 
 import org.apache.http.client.ClientProtocolException;
@@ -27,15 +28,8 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 	
-		
-		InitializeDB idb = new InitializeDB(this);
-        idb.open();
-        idb.close();
         
-        MapView cv = new MapView(this);
-        
-       //EditText et = (EditText)findViewById(R.id.editText3);
-       
+        MapView cv = new MapView(this); 
       
        
         setContentView(cv);
@@ -45,6 +39,7 @@ public class MainActivity extends Activity {
         try {
 			Building b = Connect.getBuildingFromId(6);
 			Connect.getImages(b);
+			Save.SaveBuilding(b, this);
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -59,7 +54,10 @@ public class MainActivity extends Activity {
  catch (ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} catch (URISyntaxException e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}
 	}
 
 	@Override

@@ -4,6 +4,9 @@ package it.inav.database;
 import it.inav.base_objects.Building;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -56,10 +59,10 @@ public class Buildings {
 			String descrizione, 
 			Date data_creazione, 
 			Date data_update,
-			String link,
+			URL link,
 			int numero_di_piani,
 			int versione,
-			String foto,
+			URI foto_link,
 			GeoPoint[] geometria
 			) {
 
@@ -73,14 +76,24 @@ public class Buildings {
 		initialValues.put(Building.DESCRIZIONE, descrizione);
 		initialValues.put(Building.DATA_C, data_creazione.getTime());
 		initialValues.put(Building.DATA_U, data_update.getTime());
-		initialValues.put(Building.LINK, link);
 		initialValues.put(Building.VERSIONE, versione);
+		initialValues.put(Building.NUMERO_DI_PIANI, numero_di_piani);
+		
+		String slink = "";
+		if (link != null)
+			slink = link.toString();
+		initialValues.put(Building.LINK, slink);
+		
+		String foto = "";
+		if (foto_link != null)
+			foto = foto_link.toString();
 		initialValues.put(Building.FOTO, foto);
 
 		String out = "[";
 		for(GeoPoint gp : geometria)
 			out += "["+gp.getLatitudeE6()+","+gp.getLongitudeE6()+"],";
-
+		out += ']';
+		
 		initialValues.put(Building.GEOMETRIA, out);
 
 		return mDb.insert(Building.BUILDING_TAG, null, initialValues);
@@ -92,7 +105,8 @@ public class Buildings {
 	}
 
 	// RECUPERO TUTTI GLI EDIFICI
-	protected List<Building> fetchBuilding() throws SQLException, MalformedURLException {
+	protected List<Building> fetchBuilding() 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		Cursor mCursor = mDb.query(true, Building.BUILDING_TAG, allParameters, null, null,
 				null, null, Building.NOME+" ASC", null);
 		if (mCursor != null)  
@@ -101,7 +115,8 @@ public class Buildings {
 	}
 
 	// RECUPERO UN EDIFICIO TRAMITE L'ID
-	protected Building fetchBuilding(long id) throws SQLException, MalformedURLException {
+	protected Building fetchBuilding(long id) 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		Cursor mCursor = mDb.query(true, Building.BUILDING_TAG, allParameters, id + "=" + Building.ID, null,
 				null, null, Building.NOME+" ASC", null);
 		if (mCursor != null) 
@@ -110,7 +125,8 @@ public class Buildings {
 	}
 
 	// RECUPERO UN/ALCUNI EDIFICI TRAMITE IL NOME
-	protected List<Building> fetchBuilding(String nome) throws SQLException, MalformedURLException {
+	protected List<Building> fetchBuilding(String nome) 
+			throws SQLException, MalformedURLException, URISyntaxException {
 		Cursor mCursor = mDb.query(true, Building.BUILDING_TAG, allParameters, nome + "=" + Building.NOME, null,
 				null, null, Building.NOME+" ASC", null);
 		if (mCursor != null) 
@@ -120,7 +136,8 @@ public class Buildings {
 
 
 	// CREAZIONE DI UNA LISTA DI BUILDINGS
-	private List<Building> cursorTobuildingList(Cursor cursor) throws MalformedURLException {
+	private List<Building> cursorTobuildingList(Cursor cursor) 
+			throws MalformedURLException, URISyntaxException {
 
 		List <Building> output = new ArrayList<Building>();
 
@@ -134,7 +151,7 @@ public class Buildings {
 
 
 	// CREAZIONE DI UN SOLO BUILDING
-	private Building cursorTobuilding(Cursor cursor) throws MalformedURLException {
+	private Building cursorTobuilding(Cursor cursor) throws MalformedURLException, URISyntaxException {
 
 		return new Building(
 				cursor.getLong(cursor.getColumnIndex(Building.ID)),
