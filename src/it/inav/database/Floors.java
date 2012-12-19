@@ -1,6 +1,8 @@
 package it.inav.database;
 
+import it.inav.base_objects.Building;
 import it.inav.base_objects.Floor;
+import it.inav.base_objects.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,98 +16,100 @@ import android.util.Log;
 public class Floors {
 
 	private SQLiteDatabase mDb;
-	
-	// Tabella per la gestione dei piani
-	protected static final String floorTable = "Piani";							// nome della tabella
-	private static final String colFloorId = "Id";								// chiave, LONG autoincrementale
-	private static final String colFloorLink = "Link";							// link alla posizione fisica dell'immagine del piano, STRING
-	private static final String colFloorBearing = "Orientamento";				// orientamento di ogni piano rispetto al nord, STRING
-	private static final String colFloorNumber = "Numero_di_piano";				// numero del piano
-	protected static final String colFloorReferenceBuilding = "Id_edificio";		// chiave esterna, indica l'edificio a cui appartiene questo piano, LONG
-	
-	private static final String[] allParameters = new String[] {colFloorId,
-		colFloorLink, colFloorBearing, colFloorNumber};
-	
+
+	private static final String[] allParameters = new String[] {Floor.ID, 
+		Floor.IMMAGINE, Floor.BEARING, Floor.NUMERO_DI_PIANO, Floor.DESCRIZIONE};
+
 	// Stringa creazione Tabella
 	protected static final String Floors =
-			"CREATE TABLE " +floorTable+" ( " 
-					+colFloorId+ " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+colFloorLink+ " TEXT, "
-					+colFloorBearing+ " TEXT, " // trovare valore per numero con virgola
-					+colFloorNumber+ " INT, "
-					+colFloorReferenceBuilding+ " INTEGER NOT NULL, "
-					+"FOREIGN KEY ( "+colFloorReferenceBuilding+" ) "
-					+"REFERENCES " +Buildings.buildingTable+ " ( " +Buildings.colBuildingId+ " )"
-					+");";
-		
-		
+			"CREATE TABLE " 
+					+ Building.FLOORS_TAG +" ( " 
+					+ Floor.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+					+ Floor.IMMAGINE + " TEXT, "
+					+ Floor.BEARING + " TEXT, " // trovare valore per numero con virgola
+					+ Floor.NUMERO_DI_PIANO + " INT, "
+					+ Floor.DESCRIZIONE + " TEXT, "
+					+ Building.BUILDING_TAG + " INTEGER NOT NULL, "
+					+ "FOREIGN KEY ( "+ Building.BUILDING_TAG +" ) "
+					+ "REFERENCES " + Building.BUILDING_TAG + " ( " + Building.ID + " )"
+					+ ");";
+
+
 	protected Floors(SQLiteDatabase mDb) {
 		this.mDb = mDb;
 	}
-	
-	
+
+
 	// CREA Piano
 	protected long createFloor(
 			long edificio,
 			String link,
 			double bearing,
-			int floor_number
+			int numero_di_piano, 
+			String descrizione
 			) { 
 
-		Log.i(floorTable, "Inserting record...");
+		Log.i(Building.FLOORS_TAG, "Inserting record...");
+
 		ContentValues initialValues = new ContentValues();
-		initialValues.put(colFloorLink, link);
-		initialValues.put(colFloorBearing, ""+bearing);
-		initialValues.put(colFloorNumber, floor_number);
-		initialValues.put(colFloorReferenceBuilding, edificio);
-		return mDb.insert(floorTable, null, initialValues);
+		initialValues.put(Floor.IMMAGINE, link);
+		initialValues.put(Floor.BEARING, "" + bearing);
+		initialValues.put(Floor.NUMERO_DI_PIANO, numero_di_piano);
+		initialValues.put(Floor.DESCRIZIONE, descrizione);
+		initialValues.put(Building.BUILDING_TAG, edificio);
+
+		return mDb.insert(Building.FLOORS_TAG, null, initialValues);
 	}
-		
+
 	// CANCELLA UN PIANO
 	protected boolean deletefloor(long id) {
-		return mDb.delete(floorTable, colFloorId + "=" + id, null) > 0;
+		return mDb.delete(Building.FLOORS_TAG, Floor.ID + "=" + id, null) > 0;
 	}
-	
+
 	// CANCELLO TUTTI I PIANI DI UN EDIFICIO
 	protected boolean deleteAllFloors(long id) {
-		return mDb.delete(floorTable, colFloorReferenceBuilding + "=" + id, null) > 0;
+		return mDb.delete(Building.FLOORS_TAG, Building.BUILDING_TAG + "=" + id, null) > 0;
 	}
-	
+
 	// RECUPERO TUTTI I PIANI DI UN EDIFICIO (ordinati per piano)
-	protected List<Floor> fetchfloors(long Id) throws SQLException {
-		Cursor mCursor = mDb.query(true, floorTable, allParameters, 
-				colFloorReferenceBuilding + "=" + Id, null,	null, null, colFloorNumber+" ASC", null);
+	protected List<Floor> fetchFloors(long Id, List<Point> points) throws SQLException {
+		Cursor mCursor = mDb.query(true, Building.FLOORS_TAG, allParameters, 
+				Building.BUILDING_TAG + "=" + Id, null,	null, null, Floor.NUMERO_DI_PIANO+" ASC", null);
 		if (mCursor != null)  
 			mCursor.moveToFirst();
-		return cursorTofloorList(mCursor);
+		return cursorTofloorList(mCursor, points);
 	}
-		
-		
-		
-	
+
+
 	// METODI PER RESTITUIRE UNA LISTA (O PIANI SINGOLI) DAI CURSORI /////////////////////////////////////////
-	private List<Floor> cursorTofloorList(Cursor cursor) {
-		
+	private List<Floor> cursorTofloorList(Cursor cursor, List<Point> points) {
+
 		List <Floor> output = new ArrayList<Floor>();
-		
+
 		if (cursor!=null) {
 			do {
-				output.add(cursorTofloor(cursor));
+				output.add(cursorToFloor(cursor, points));
 			} while (cursor.moveToNext());
 		}
 		return output;
 	}
-	
-	private Floor cursorTofloor(Cursor cursor) {
-		/*return new Floor(
-				cursor.getLong(cursor.getColumnIndex(colFloorId)),
-				cursor.getString(cursor.getColumnIndex(colFloorLink)),
-				Double.parseDouble(cursor.getString(cursor.getColumnIndex(colFloorBearing))),
-				cursor.getInt(cursor.getColumnIndex(colFloorNumber))
-				);*/
-		return null;
+
+	private Floor cursorToFloor(Cursor cursor, List<Point> points) {
+		try {
+			return new Floor(
+					cursor.getLong(cursor.getColumnIndex(Floor.ID)),
+					cursor.getString(cursor.getColumnIndex(Floor.IMMAGINE)),
+					Double.parseDouble(cursor.getString(cursor.getColumnIndex(Floor.BEARING))),
+					cursor.getInt(cursor.getColumnIndex(Floor.NUMERO_DI_PIANO)),
+					cursor.getString(cursor.getColumnIndex(Floor.DESCRIZIONE)),
+					points
+					);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} 
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////	
-	
+
 }
 

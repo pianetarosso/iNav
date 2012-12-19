@@ -1,5 +1,6 @@
 package it.inav.database;
 
+import it.inav.base_objects.Building;
 import it.inav.base_objects.Pixel;
 import it.inav.base_objects.Point;
 
@@ -17,34 +18,24 @@ public class Points {
 	
 	private SQLiteDatabase mDb;
 	
-	// Tabella per la gestione dei punti
-	protected static final String pointTable = "Punti";							// nome della tabella
-	protected static final String colPointId = "Id";								// chiave, LONG autoincrementale
-	private static final String colPointRFID = "RFID";							// valore RFID, STRING
-	protected static final String colPointReferenceBuilding = "Id_edificio";	// chiave esterna, indica l'edificio a cui appartiene questo punto, LONG
-	private static final String colPointPixelX = "X";							// posizione X sulla mappa, INT
-	private static final String colPointPixelY = "Y";							// posizione Y sulla mappa, INT
-	private static final String colPointFloor = "Piano";						// piano dove si trova il punto, INT
-	private static final String colPointInOut = "Via_di_accesso";				// se il punto è un ingresso o un uscita, INT
 	
-	
-	private static final String[] allParameters = new String[] {colPointId,
-		colPointRFID, colPointPixelX, colPointPixelY, 
-		colPointFloor, colPointInOut};
+	private static final String[] allParameters = new String[] {Point.ID, 
+		Point.RFID_, Point.X, Point.Y, Point.PIANO, Point.INGRESSO};
 	
 	// Stringa creazione Tabella
 	protected static final String Points =
-			"CREATE TABLE " +pointTable+" ( " 
-					+colPointId+ " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+colPointRFID+ " TEXT, "
-					+colPointPixelX+ " INT, " 
-					+colPointPixelY+ " INT, "
-					+colPointFloor+ " INT, "
-					+colPointInOut+ " INT, "
-					+colPointReferenceBuilding+ " INTEGER NOT NULL, "
-					+"FOREIGN KEY ( "+colPointReferenceBuilding+" ) "
-					+"REFERENCES " +Buildings.buildingTable+ " ( " +Buildings.colBuildingId+ " )"
-					+");";
+			"CREATE TABLE " 
+					+ Building.POINTS_TAG +" ( " 
+					+ Point.ID + " LONG PRIMARY KEY, "
+					+ Point.RFID_+ " TEXT, "
+					+ Point.X + " INT, " 
+					+ Point.Y + " INT, "
+					+ Point.PIANO + " INT, "
+					+ Point.INGRESSO + " INT, "
+					+ Building.BUILDING_TAG + " INTEGER NOT NULL, "
+					+ "FOREIGN KEY ( " + Building.BUILDING_TAG + " ) "
+					+ "REFERENCES " + Building.BUILDING_TAG + " ( " + Building.ID + " )"
+					+ ");";
 		
 		
 	protected Points(SQLiteDatabase mDb) {
@@ -54,38 +45,42 @@ public class Points {
 	
 	// CREA PUNTO
 	protected long createPoint(
+			long id,
 			long edificio,
 			String RFID,
 			Pixel p, 
 			int piano,
-			boolean ingresso_uscita
+			boolean ingresso
 			) { 
 
-		Log.i(pointTable, "Inserting record...");
+		Log.i(Building.POINTS_TAG, "Inserting record...");
+		
 		ContentValues initialValues = new ContentValues();
-		initialValues.put(colPointRFID, RFID);
-		initialValues.put(colPointPixelX, p.x);
-		initialValues.put(colPointPixelY, p.y);
-		initialValues.put(colPointFloor, piano);
-		initialValues.put(colPointInOut, convertBoolean(ingresso_uscita));
-		initialValues.put(colPointReferenceBuilding, edificio);
-		return mDb.insert(pointTable, null, initialValues);
+		initialValues.put(Point.ID, id);
+		initialValues.put(Point.RFID_, RFID);
+		initialValues.put(Point.X, p.x);
+		initialValues.put(Point.Y, p.y);
+		initialValues.put(Point.PIANO, piano);
+		initialValues.put(Point.INGRESSO, convertBoolean(ingresso));
+		initialValues.put(Building.BUILDING_TAG, edificio);
+		
+		return mDb.insert(Building.POINTS_TAG, null, initialValues);
 	}
 		
 	// CANCELLA UN PUNTO
 	protected boolean deletePoint(long id) {
-		return mDb.delete(pointTable, colPointId + "=" + id, null) > 0;
+		return mDb.delete(Building.POINTS_TAG, Point.ID + "=" + id, null) > 0;
 	}
 	
 	// CANCELLO TUTTI I PUNTI DI UN EDIFICIO
 	protected boolean deleteAllPoints(long id) {
-		return mDb.delete(pointTable, colPointReferenceBuilding + "=" + id, null) > 0;
+		return mDb.delete(Building.POINTS_TAG, Building.BUILDING_TAG + "=" + id, null) > 0;
 	}
 	
 	// RECUPERO TUTTI I PUNTI DI UN EDIFICIO (ordinati per piano)
 	protected List<Point> fetchPoints(long id) throws SQLException {
-		Cursor mCursor = mDb.query(true, pointTable, allParameters, 
-				colPointReferenceBuilding + "=" + id, null,	null, null, colPointFloor+" ASC", null);
+		Cursor mCursor = mDb.query(true, Building.POINTS_TAG, allParameters, 
+				Building.BUILDING_TAG + "=" + id, null,	null, null, Point.PIANO+" ASC", null);
 		if (mCursor != null)  
 			mCursor.moveToFirst();
 		return cursorTopointList(mCursor);
@@ -109,22 +104,16 @@ public class Points {
 	
 	private Point cursorToPoint(Cursor cursor) {
 		return new Point(
-				cursor.getLong(cursor.getColumnIndex(colPointId)),
-				cursor.getString(cursor.getColumnIndex(colPointRFID)),
-				cursor.getInt(cursor.getColumnIndex(colPointPixelX)),
-				cursor.getInt(cursor.getColumnIndex(colPointPixelY)),
-				cursor.getInt(cursor.getColumnIndex(colPointFloor)),
-				convertBoolean(cursor.getInt(cursor.getColumnIndex(colPointInOut)))
+				cursor.getLong(cursor.getColumnIndex(Point.ID)),
+				cursor.getString(cursor.getColumnIndex(Point.RFID_)),
+				cursor.getInt(cursor.getColumnIndex(Point.X)),
+				cursor.getInt(cursor.getColumnIndex(Point.Y)),
+				cursor.getInt(cursor.getColumnIndex(Point.PIANO)),
+				convertBoolean(cursor.getInt(cursor.getColumnIndex(Point.INGRESSO)))
 				);
 	}
 	///////////////////////////////////////////////////////////////////////////////////////////////////	
-	
-	
-	
-	
-		
-	
-	
+
 	
 	// METODI VARI PER RENDERE I VALORI ACCETTABILI DA DATABASE E IN USCITA //////////////////////////////
 	private int convertBoolean(boolean b) {

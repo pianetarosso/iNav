@@ -1,7 +1,10 @@
 package it.inav.database;
 
+import it.inav.base_objects.Building;
+import it.inav.base_objects.Point;
 import it.inav.base_objects.Room;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,151 +17,105 @@ import android.util.Log;
 public class Rooms {
 
 	private SQLiteDatabase mDb;
-	private static final String separator = "--";
-	
-	// Tabella per la gestione delle stanze
-	protected static final String roomTable = "Stanze";							// nome della tabella
-	protected static final String colRoomId = "Id";								// chiave, LONG autoincrementale
-	protected static final String colRoomReferenceBuilding = "Id_edificio";		// chiave esterna, indica l'edificio a cui appartiene questa stanza, LONG
-	protected static final String colRoomReferencePoint = "Id_punto";			// chiave esterna, indica il punto a cui appartiene questa stanza, LONG
-	private static final String colRoomFloor = "Piano";							// piano dove si trova la stanza, INT
-	private static final String colRoomLink = "Link";							// se la stanza ha qualche contenuto in rete, STRING
-	private static final String colRoomRoomName = "Nome_stanza";				// se la stanza si trova in una stanza con qualche "nome" (es. "Ufficio 42"), STRING
-	private static final String colRoomPeople = "Persone";						// se la stanza è associato ad una o più persone (separate da "-"), STRING
-	private static final String colRoomOther = "Altro";							// altri possibili dati sulla stanza, String
-	
-	private static final String[] allParameters = new String[] {colRoomId,
-		colRoomFloor, colRoomLink, colRoomReferencePoint,
-		colRoomRoomName, colRoomPeople, colRoomOther};
-	
+
+	private static final String[] allParameters = new String[] {Room.ID,
+		Room.LINK, Room.PUNTO, Room.NOME_STANZA, Room.PERSONE, Room.ALTRO};
+
 	// Stringa creazione Tabella
 	protected static final String Rooms =
-			"CREATE TABLE " +roomTable+" ( " 
-					+colRoomId+ " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+colRoomFloor+ " INT, "
-					+colRoomLink+ " TEXT, "
-					+colRoomRoomName+ " TEXT, "
-					+colRoomPeople+ " TEXT, "
-					+colRoomOther+ " TEXT, "
-					+colRoomReferenceBuilding+ " INTEGER NOT NULL, "
-					+colRoomReferencePoint+ " INTEGER NOT NULL, "
-					+"FOREIGN KEY ( "+colRoomReferenceBuilding+" ) "
-					+"REFERENCES " +Buildings.buildingTable+ " ( " +Buildings.colBuildingId+ " )"
-					+");";
-		
-		
+			"CREATE TABLE " 
+					+ Building.ROOMS_TAG + " ( " 
+					+ Room.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+					+ Room.LINK + " TEXT, "
+					+ Room.NOME_STANZA + " TEXT, "
+					+ Room.PERSONE + " TEXT, "
+					+ Room.ALTRO + " TEXT, "
+					
+					+ Building.BUILDING_TAG + " INTEGER NOT NULL, "
+					+ Room.PUNTO + " INTEGER NOT NULL, "
+					
+					+ "FOREIGN KEY ( " + Building.BUILDING_TAG + " ) "
+					+ "REFERENCES " + Building.BUILDING_TAG + " ( " + Building.ID + " ), "
+					
+					+ "FOREIGN KEY ( " + Room.PUNTO + " ) "
+					+ "REFERENCES " + Building.POINTS_TAG + " ( " + Point.ID + " )"
+					+ ");";
+
+
 	protected Rooms(SQLiteDatabase mDb) {
 		this.mDb = mDb;
 	}
-	
-	
+
+
 	// CREA Stanza
 	protected long createRooms(
 			long edificio,
 			long punto,
-			int piano,
 			String link,
 			String nome_stanza,
 			String personale,
 			String altro
 			) { 
 
-		Log.i(roomTable, "Inserting record...");
+		Log.i(Building.ROOMS_TAG, "Inserting record...");
+
 		ContentValues initialValues = new ContentValues();
-		initialValues.put(colRoomFloor, piano);
-		initialValues.put(colRoomLink, link);
-		initialValues.put(colRoomRoomName, nome_stanza);
-		initialValues.put(colRoomPeople, personale);
-		initialValues.put(colRoomOther, altro);
-		initialValues.put(colRoomReferenceBuilding, edificio);
-		initialValues.put(colRoomReferencePoint, punto);
-		return mDb.insert(roomTable, null, initialValues);
+		initialValues.put(Room.LINK, link);
+		initialValues.put(Room.NOME_STANZA, nome_stanza);
+		initialValues.put(Room.PERSONE, personale);
+		initialValues.put(Room.ALTRO, altro);
+		initialValues.put(Building.BUILDING_TAG, edificio);
+		initialValues.put(Room.PUNTO, punto);
+
+		return mDb.insert(Building.ROOMS_TAG, null, initialValues);
 	}
-	
-		
-	// CANCELLA UNA STANZA
-	protected boolean deleteRooms(long id) {
-		return mDb.delete(roomTable, colRoomId + "=" + id, null) > 0;
-	}
-	
+
 	// CANCELLO TUTTI LE STANZE DI UN EDIFICIO
 	protected boolean deleteAllRooms(long id) {
-		return mDb.delete(roomTable, colRoomReferenceBuilding + "=" + id, null) > 0;
+		return mDb.delete(Building.ROOMS_TAG, Building.BUILDING_TAG + "=" + id, null) > 0;
 	}
-	
+
 	// RECUPERO TUTTI LE STANZE DI UN EDIFICIO (ordinate per piano)
-	protected List<Room> fetchRooms(long id) throws SQLException {
-		Cursor mCursor = mDb.query(true, roomTable, allParameters, 
-				colRoomReferenceBuilding + "=" + id, null,	null, null, colRoomFloor+" ASC", null);
+	protected List<Room> fetchRooms(long id, List<Point> points) throws SQLException, MalformedURLException {
+		Cursor mCursor = mDb.query(true, Building.ROOMS_TAG, allParameters, 
+				Building.BUILDING_TAG + "=" + id, null,	null, null, Room.NOME_STANZA + " ASC", null);
 		if (mCursor != null)  
 			mCursor.moveToFirst();
-		return cursorToRoomList(mCursor);
+		return cursorToRoomList(mCursor, points);
 	}
-		
-	
+
+
 	// METODI PER RESTITUIRE UNA LISTA (O PUNTI SINGOLI) DAI CURSORI /////////////////////////////////////////
-	private List<Room> cursorToRoomList(Cursor cursor) {
-		
+	private List<Room> cursorToRoomList(Cursor cursor, List<Point> points) throws MalformedURLException {
+
 		List <Room> output = new ArrayList<Room>();
-		
+
 		if (cursor!=null) {
 			do {
-				output.add(cursorToRoom(cursor));
+				output.add(cursorToRoom(cursor, points));
 			} while (cursor.moveToNext());
 		}
 		return output;
 	}
-	
-	private Room cursorToRoom(Cursor cursor) {
-		return null/*new Room(
-				cursor.getLong(cursor.getColumnIndex(colRoomId)),
-				cursor.getLong(cursor.getColumnIndex(colRoomReferencePoint)),
-				cursor.getInt(cursor.getColumnIndex(colRoomFloor)),
-				cursor.getString(cursor.getColumnIndex(colRoomLink)),
-				cursor.getString(cursor.getColumnIndex(colRoomRoomName)),
-				convertArray(cursor.getString(cursor.getColumnIndex(colRoomPeople))),
-				cursor.getString(cursor.getColumnIndex(colRoomOther))
-				)*/;
-	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////	
-	
-	
-	
-	
-		
-	
-	
-	
-	// METODI VARI PER RENDERE I VALORI ACCETTABILI DA DATABASE E IN USCITA //////////////////////////////
-		
-	public String convertArray(String[] a) {
-		String o = "";
-		for(int i=0; i<a.length; i++)
-			o += separator+a[i];
-		return o;
-	}
-	
-	public String convertArray(List<String> a) {
-		String o = "";
-		for(int i=0; i<a.size(); i++)
-			o += separator+a.get(i);
-		return o;
-	}
-		
-	private String[] convertArray(String s) {
-		String[] o; 
-		if (s.length()>0) {
-			if (s.contains(separator)) 
-				o = s.split(separator);
-			else {
-				o = new String[1];
-				o[0] = s;
+
+	private Room cursorToRoom(Cursor cursor, List<Point> points) throws MalformedURLException {
+
+		long id = cursor.getLong(cursor.getColumnIndex(Room.PUNTO));
+		Point point = null;
+		for(Point p : points)
+			if (p.id == id) {
+				point = p;
+				break;
 			}
-			return o;
-		}
-		else
-			return new String[0];
+
+		return new Room(
+				cursor.getString(cursor.getColumnIndex(Room.NOME_STANZA)),
+				cursor.getString(cursor.getColumnIndex(Room.PERSONE)),
+				cursor.getString(cursor.getColumnIndex(Room.ALTRO)),
+				cursor.getString(cursor.getColumnIndex(Room.LINK)),
+				point
+				);
 	}
-	/////////////////////////////////////////////////////////////////////////////////////////////		
-		
+
+
 }

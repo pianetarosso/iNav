@@ -1,6 +1,8 @@
 package it.inav.database;
 
+import it.inav.base_objects.Building;
 import it.inav.base_objects.Path;
+import it.inav.base_objects.Point;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,40 +17,34 @@ public class Paths {
 
 private SQLiteDatabase mDb;
 	
-	// Tabella per la gestione dei percorsi
-	protected static final String pathTable = "Percorsi";							// nome della tabella
-	private static final String colPathId = "Id";								// chiave, LONG autoincrementale
-	private static final String colPathCost = "Costo";							// costo del persorso, INT
-	private static final String colPathElevator = "Ascensore";					// ascensore, INT
-	private static final String colPathStair = "Scala";							// Scala, INT
-	protected static final String colPathReferenceBuilding = "Id_edificio";		// chiave esterna, indica l'edificio a cui appartiene questo percorso, LONG
-	protected static final String colPathReferencePointA = "Id_punto_A";		// chiave esterna, indica il punto A, LONG
-	protected static final String colPathReferencePointB = "Id_punto_B";		// chiave esterna, indica il punto B, LONG
 	
 	
 	private static final String[] allParameters = new String[] {
-		colPathCost, colPathElevator, colPathStair, colPathReferencePointA, colPathReferencePointB};
+		Path.COSTO, Path.ASCENSORE, Path.SCALA, Path.A, Path.B};
 	
 	// Stringa creazione Tabella
 	protected static final String Paths =
-			"CREATE TABLE " +pathTable+" ( " 
-					+colPathId+ " INTEGER PRIMARY KEY AUTOINCREMENT, "
-					+colPathCost+ " INT, "
-					+colPathElevator+ " INT, " 
-					+colPathStair+ " INT, "
-					+colPathReferencePointA+ " INTEGER NOT NULL, "
-					+colPathReferencePointB+ " INTEGER NOT NULL, "
-					+colPathReferenceBuilding+ " INTEGER NOT NULL, "
+			"CREATE TABLE " 
+					+ Building.PATHS_TAG + " ( " 
+					+ Path.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+					+ Path.COSTO + " INT, "
+					+ Path.ASCENSORE + " TEXT, " 
+					+ Path.SCALA + " TEXT, "
 					
-					+"FOREIGN KEY ( "+colPathReferencePointA+" ) "
-					+"REFERENCES " +Points.pointTable+ " ( " +Points.colPointId+ " ), "
+					+ Path.A + " INTEGER NOT NULL, "
+					+ Path.B + " INTEGER NOT NULL, "
+					+ Building.BUILDING_TAG + " INTEGER NOT NULL, "
 					
-					+"FOREIGN KEY ( "+colPathReferencePointB+" ) "
-					+"REFERENCES " +Points.pointTable+ " ( " +Points.colPointId+ " ), "
+					+ "FOREIGN KEY ( " + Path.A + " ) "
+					+ "REFERENCES " + Building.POINTS_TAG + " ( " + Point.ID + " ), "
 					
-					+"FOREIGN KEY ( "+colPathReferenceBuilding+" ) "
-					+"REFERENCES " +Buildings.buildingTable+ " ( " +Buildings.colBuildingId+ " )"
-					+");";
+					+ "FOREIGN KEY ( " + Path.B + " ) "
+					+ "REFERENCES " + Building.POINTS_TAG + " ( " + Point.ID + " ), "
+					
+					+ "FOREIGN KEY ( " + Building.BUILDING_TAG + " ) "
+					+ "REFERENCES " + Building.BUILDING_TAG + " ( " + Building.ID + " )"
+					
+					+ ");";
 		
 		
 	protected Paths(SQLiteDatabase mDb) {
@@ -60,80 +56,63 @@ private SQLiteDatabase mDb;
 	protected long createPath(
 			long edificio,
 			int costo,
-			boolean ascensore,
-			boolean scale,
+			String ascensore,
+			String scale,
 			long A,
 			long B
 			) { 
 
-		Log.i(pathTable, "Inserting record...");
-		ContentValues initialValues = new ContentValues();
-		initialValues.put(colPathCost, costo);
-		initialValues.put(colPathElevator, convertBoolean(ascensore));
-		initialValues.put(colPathStair, convertBoolean(scale));
-		initialValues.put(colPathReferencePointA, A);
-		initialValues.put(colPathReferencePointB, B);
-		initialValues.put(colPathReferenceBuilding, edificio);
-		return mDb.insert(pathTable, null, initialValues);
-	}
+		Log.i(Building.PATHS_TAG, "Inserting record...");
 		
-	// CANCELLA UN PERCORSO
-	protected boolean deletePath(long id) {
-		return mDb.delete(pathTable, colPathId + "=" + id, null) > 0;
+		ContentValues initialValues = new ContentValues();
+		initialValues.put(Path.COSTO, costo);
+		initialValues.put(Path.ASCENSORE, ascensore);
+		initialValues.put(Path.SCALA, scale);
+		initialValues.put(Path.A, A);
+		initialValues.put(Path.B, B);
+		initialValues.put(Building.BUILDING_TAG, edificio);
+		return mDb.insert(Building.PATHS_TAG, null, initialValues);
 	}
 	
 	// CANCELLO TUTTI I PERCORSI DI UN EDIFICIO
 	protected boolean deleteAllPaths(long id) {
-		return mDb.delete(pathTable, colPathReferenceBuilding + "=" + id, null) > 0;
+		return mDb.delete(Building.PATHS_TAG, Building.BUILDING_TAG + "=" + id, null) > 0;
 	}
 	
 	// RECUPERO TUTTI I PERCORSI DI UN EDIFICIO (ordinati per piano)
-	protected List<Path> fetchAllPaths(long id) throws SQLException {
-		Cursor mCursor = mDb.query(true, pathTable, allParameters, 
-				colPathReferenceBuilding + "=" + id, null,	null, null, colPathReferencePointA+" ASC", null);
+	protected List<Path> fetchAllPaths(long id, List<Point> points) throws SQLException {
+		Cursor mCursor = mDb.query(true, Building.PATHS_TAG, allParameters, 
+				Building.BUILDING_TAG + "=" + id, null,	null, null, Path.A+" ASC", null);
 		if (mCursor != null)  
 			mCursor.moveToFirst();
-		return cursorTopathList(mCursor);
+		return cursorTopathList(mCursor, points);
 	}
 		
 		
 		
 	
 	// METODI PER RESTITUIRE UNA LISTA (O PIANI SINGOLI) DAI CURSORI /////////////////////////////////////////
-	private List<Path> cursorTopathList(Cursor cursor) {
+	private List<Path> cursorTopathList(Cursor cursor, List<Point> points) {
 		
 		List <Path> output = new ArrayList<Path>();
 		
 		if (cursor!=null) {
 			do {
-				output.add(cursorTopath(cursor));
+				output.add(cursorTopath(cursor, points));
 			} while (cursor.moveToNext());
 		}
 		return output;
 	}
 	
-	private Path cursorTopath(Cursor cursor) {
-		return null/*new Path(
-				cursor.getInt(cursor.getColumnIndex(colPathCost)),
-				convertBoolean(cursor.getInt(cursor.getColumnIndex(colPathElevator))),
-				convertBoolean(cursor.getInt(cursor.getColumnIndex(colPathStair))),
-				cursor.getLong(cursor.getColumnIndex(colPathReferencePointA)),
-				cursor.getLong(cursor.getColumnIndex(colPathReferencePointB))
-				)*/;
+	private Path cursorTopath(Cursor cursor, List<Point> points) {
+		return new Path(
+				cursor.getLong(cursor.getColumnIndex(Path.A)),
+				cursor.getLong(cursor.getColumnIndex(Path.B)),
+				cursor.getString(cursor.getColumnIndex(Path.ASCENSORE)),
+				cursor.getString(cursor.getColumnIndex(Path.SCALA)),
+				cursor.getInt(cursor.getColumnIndex(Path.COSTO)),
+				points
+				);
 	}
-	///////////////////////*/////////////////////////////////////////////////////////////////////////////	
-	
-	
-	// METODI VARI PER RENDERE I VALORI ACCETTABILI DA DATABASE E IN USCITA //////////////////////////////
-		private int convertBoolean(boolean b) {
-			if (b)
-				return 1;
-			return 0;
-		}
-			
-		private boolean convertBoolean(int i) {
-			return i == 1;
-		}
-	//////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 

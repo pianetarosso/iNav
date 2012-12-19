@@ -3,10 +3,10 @@ package it.inav.database;
 import it.inav.base_objects.Building;
 import it.inav.base_objects.Floor;
 import it.inav.base_objects.Path;
-import it.inav.base_objects.Pixel;
 import it.inav.base_objects.Point;
 import it.inav.base_objects.Room;
 
+import java.net.MalformedURLException;
 import java.util.List;
 
 import android.content.Context;
@@ -26,81 +26,88 @@ public class InitializeDB {
 	private DatabaseHelper mDbHelper;
 	private SQLiteDatabase mDb;
 	
-	private Buildings buildings;
-	private Points points;
-	private Floors floors;
-	private Paths paths;
-	private Rooms rooms;
+	protected Buildings buildings;
+	protected Paths paths;
+	protected Points points;
+	protected Rooms rooms;
+	protected Floors floors;
 	
 	// Stringhe creazione Trigger
 
 	// TR_Point_Buildings---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Buildings e Points sia coerente
 	private static final String TR_Point_Buildings = "CREATE TRIGGER TR_Point_Buildings " +
-			"BEFORE INSERT ON " +Points.pointTable+
+			" BEFORE INSERT ON " + Building.POINTS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Buildings.colBuildingId+ " AS ID " + " FROM " +Buildings.buildingTable+
-			" WHERE " +" ID "+"=new."+Points.colPointReferenceBuilding+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Building.ID + " AS ID " + 
+			" FROM " + Building.BUILDING_TAG +
+			" WHERE " +" ID "+"=new."+ Building.BUILDING_TAG +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 	
 	// TR_Floor_Buildings---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Buildings e Floor sia coerente
 	private static final String TR_Floor_Buildings = "CREATE TRIGGER TR_Floor_Buildings " +
-			"BEFORE INSERT ON " +Floors.floorTable+
+			" BEFORE INSERT ON " + Building.FLOORS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Buildings.colBuildingId+ " AS ID " + " FROM " +Buildings.buildingTable+
-			" WHERE " +" ID "+"=new."+Floors.colFloorReferenceBuilding+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Building.ID + " AS ID " + 
+			" FROM " + Building.BUILDING_TAG +
+			" WHERE " +" ID "+"=new."+ Building.BUILDING_TAG +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 	
 	// TR_Path_Buildings---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Buildings e Path sia coerente
 	private static final String TR_Path_Buildings = "CREATE TRIGGER TR_Path_Buildings " +
-			"BEFORE INSERT ON " +Paths.pathTable+
+			" BEFORE INSERT ON " + Building.PATHS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Buildings.colBuildingId+ " AS ID " + " FROM " +Buildings.buildingTable+
-			" WHERE " +" ID "+"=new."+Paths.colPathReferenceBuilding+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Building.ID + " AS ID " + 
+			" FROM " + Building.BUILDING_TAG +
+			" WHERE " +" ID "+"=new."+ Building.BUILDING_TAG +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 	
 	// TR_Path_Point_A---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Point e Path sia coerente
 	private static final String TR_Path_Point_A = "CREATE TRIGGER TR_Path_Point_A " +
-			"BEFORE INSERT ON " +Paths.pathTable+
+			" BEFORE INSERT ON " + Building.PATHS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Points.colPointId+ " AS ID " + " FROM " +Points.pointTable+
-			" WHERE " +" ID "+"=new."+Paths.colPathReferencePointA+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Point.ID + " AS ID " + 
+			" FROM " + Building.POINTS_TAG +
+			" WHERE " +" ID "+"=new."+ Path.A +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 		
 	// TR_Path_Point_B---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Point e Path sia coerente
 	private static final String TR_Path_Point_B = "CREATE TRIGGER TR_Path_Point_B " +
-			"BEFORE INSERT ON " +Paths.pathTable+
+			" BEFORE INSERT ON " + Building.PATHS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Points.colPointId+ " AS ID " + " FROM " +Points.pointTable+
-			" WHERE " +" ID "+"=new."+Paths.colPathReferencePointB+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Point.ID + " AS ID " + 
+			" FROM " +Building.POINTS_TAG+
+			" WHERE " +" ID "+"=new."+ Path.B +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 	
 	// TR_Room_Buildings---------------------------------------------------------------------------------
 	// verifica che l'id dell'edificio tra la tabella Buildings e Roomss sia coerente
 	private static final String TR_Rooms_Buildings = "CREATE TRIGGER TR_Room_Buildings " +
-			"BEFORE INSERT ON " +Rooms.roomTable+
+			" BEFORE INSERT ON " + Building.ROOMS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Buildings.colBuildingId+ " AS ID " + " FROM " +Buildings.buildingTable+
-			" WHERE " +" ID "+"=new."+Rooms.colRoomReferenceBuilding+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Building.ID + " AS ID " + 
+			" FROM " + Building.BUILDING_TAG +
+			" WHERE " +" ID "+"=new."+ Building.BUILDING_TAG +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 		
 	// TR_Room_Points---------------------------------------------------------------------------------
 	// verifica che l'id dei Punti tra la tabella Points e Roomss sia coerente
 	private static final String TR_Rooms_Points = "CREATE TRIGGER TR_Room_Points " +
-			"BEFORE INSERT ON " +Rooms.roomTable+
+			"BEFORE INSERT ON " + Building.ROOMS_TAG +
 			" FOR EACH ROW BEGIN" +
-			" SELECT CASE WHEN ((SELECT " +Points.colPointId+ " AS ID " + " FROM " +Points.pointTable+
-			" WHERE " +" ID "+"=new."+Rooms.colRoomReferencePoint+") IS NULL)"+
+			" SELECT CASE WHEN ((SELECT " + Point.ID + " AS ID " + 
+			" FROM " + Building.POINTS_TAG +
+			" WHERE " +" ID "+"=new."+ Room.PUNTO +") IS NULL)"+
 			" THEN RAISE (ABORT,'Foreign Key Violation') END;"+
 			" END;";
 	
@@ -120,20 +127,24 @@ public class InitializeDB {
 		public void onCreate(SQLiteDatabase db) {  
 		
 			// creazione tabella degli edifici
-			Log.i(DATABASE_NAME, "Creating Table: " + Buildings.buildingTable);
+			Log.i(DATABASE_NAME, "Creating Table: " +  Building.BUILDING_TAG );
 			db.execSQL(Buildings.Buildings);
 			  	   
 			// creazione tabella dei punti
-			Log.i(DATABASE_NAME, "Creating Table: " + Points.pointTable);
+			Log.i(DATABASE_NAME, "Creating Table: " + Building.POINTS_TAG);
 			db.execSQL(Points.Points);
 			
 			// creazione tabella dei piani 
-			Log.i(DATABASE_NAME, "Creating Table: " + Floors.floorTable);
+			Log.i(DATABASE_NAME, "Creating Table: " +  Building.FLOORS_TAG );
 			db.execSQL(Floors.Floors);
 			  
 			// creazione tabella dei percorsi 
-			Log.i(DATABASE_NAME, "Creating Table: " + Paths.pathTable);
+			Log.i(DATABASE_NAME, "Creating Table: " +  Building.PATHS_TAG );
 			db.execSQL(Paths.Paths);
+			
+			// creazione tabella delle staze 
+			Log.i(DATABASE_NAME, "Creating Table: " +  Building.ROOMS_TAG );
+			db.execSQL(Rooms.Rooms);
 						
 			// trigger controllo consistenza tra i Points e i Buildings
 			Log.i(DATABASE_NAME, "Creating Trigger: TR_Point_Buildings");
@@ -170,11 +181,11 @@ public class InitializeDB {
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			Log.w(DATABASE_NAME, "Upgrading database from version " + oldVersion + " to "
 					+ newVersion + ", which will destroy all old data");
-			db.execSQL("DROP TABLE IF EXISTS " + Buildings.buildingTable);
-			db.execSQL("DROP TABLE IF EXISTS " + Points.pointTable);
-			db.execSQL("DROP TABLE IF EXISTS " + Floors.floorTable);
-			db.execSQL("DROP TABLE IF EXISTS " + Paths.pathTable);
-			db.execSQL("DROP TABLE IF EXISTS " + Rooms.roomTable);
+			db.execSQL("DROP TABLE IF EXISTS " + Building.BUILDING_TAG );
+			db.execSQL("DROP TABLE IF EXISTS " + Building.POINTS_TAG);
+			db.execSQL("DROP TABLE IF EXISTS " + Building.FLOORS_TAG );
+			db.execSQL("DROP TABLE IF EXISTS " + Building.PATHS_TAG );
+			db.execSQL("DROP TABLE IF EXISTS " + Building.ROOMS_TAG );
 			db.execSQL("DROP TRIGGER IF EXISTS " + "TR_Point_Buildings");
 			db.execSQL("DROP TRIGGER IF EXISTS " + "TR_Floor_Buildings");
 			db.execSQL("DROP TRIGGER IF EXISTS " + "TR_Path_Buildings");
@@ -215,36 +226,34 @@ public class InitializeDB {
 	
 	//CREATE/////////////////////////////////////////////////////////////////////////////////////
 	
+		
 	// Crea un edificio
-	public boolean createBuilding(long id, String nome, int latitudine, int longitudine,
-			int piani, int versione) {
-		return buildings.createBuilding(id, nome, latitudine, longitudine, piani, versione) > -1;
+	public boolean createBuilding(Building b) {
+		return buildings.createBuilding(b.id, b.nome, b.posizione, b.descrizione, b.data_creazione,
+				b.data_update, b.link.toString(), b.numero_di_piani, 
+				b.versione, b.foto_link.toString(), b.geometria) > -1;
 	}
 	
 	// Crea un punto
-	public long createPoint(long edificio, String RFID, Pixel p, int piano, boolean ingresso_uscita) {
-		return points.createPoint(edificio, RFID, p, piano, ingresso_uscita);
+	public long createPoint(Point p, long building) {
+		return points.createPoint(p.id, building, p.RFID, p.posizione, p.piano, p.ingresso);
 	}
 	
 	// crea un piano
-	public long createFloor(long edificio, String link, double bearing, int floor_number) {
-		return floors.createFloor(edificio, link, bearing, floor_number);
+	public long createFloor(Floor f, long building) {
+		return floors.createFloor(building, f.link_immagine.toString(), f.bearing, 
+				f.numero_di_piano, f.descrizione);
 	}
 	
 	// crea un percorso
-	public boolean createPath(long edificio, int costo, boolean ascensore, boolean scale, long A, long B) {
-		return paths.createPath(edificio, costo, ascensore, scale, A, B) > -1;
+	public boolean createPath(Path p, long building) {
+		return paths.createPath(building, p.costo, p.ascensore, p.scala, p.a.id, p.b.id) > -1;
 	}
 	
 	// crea una stanza
-	public boolean createRoom(long edificio, long punto, int piano, String link, String nome_stanza, 
-			String[] personale, String altro) {
-		return rooms.createRooms(edificio, punto, piano, link, nome_stanza, rooms.convertArray(personale), altro)> -1;
-	}
-	
-	public boolean createRoom(long edificio, long punto, int piano, String link, String nome_stanza, 
-			List<String> personale, String altro) {
-		return rooms.createRooms(edificio, punto, piano, link, nome_stanza, rooms.convertArray(personale), altro)> -1;
+	public boolean createRoom(Room r, long building) {
+		return rooms.createRooms(building, r.punto.id, r.link.toString(), r.nome_stanza,
+				r.getPersone(), r.altro)> -1;
 	}
 	
 	// DELETE /////////////////////////////////////////////////////////////////////////////////
@@ -264,28 +273,28 @@ public class InitializeDB {
 	// FETCH//////////////////////////////////////////////////////////////////////////////////////
 	
 	// recupera tutti gli edifici
-	public List<Building> fetchBuildings() {
+	public List<Building> fetchBuildings() throws SQLException, MalformedURLException {
 		return buildings.fetchBuilding();
 	}
 	
 	// verifico se un edificio è presente nel datatbase (tramite il suo id)
-	public boolean existBuilding(long id) {
+	public boolean existBuilding(long id) throws SQLException, MalformedURLException {
 		return buildings.fetchBuilding(id) != null;
 	}
 	
 	// recupera un edificio specifico (tramite il suo id)
-	public Building fetchBuilding(long id) {
+	public Building fetchBuilding(long id) throws SQLException, MalformedURLException {
 		Building b = buildings.fetchBuilding(id);
-	/*	b.setFloors(floors.fetchfloors(id));
-		b.setPoints(points.fetchPoints(id));
-		b.setPaths(paths.fetchAllPaths(id));
-		b.setRooms(rooms.fetchRooms(id));
-	*/	return b;
+		b.setPunti(points.fetchPoints(id));
+		b.setPiani(floors.fetchFloors(id, b.getPunti()));
+		b.setPaths(paths.fetchAllPaths(id, b.getPunti()));
+		b.setStanze(rooms.fetchRooms(id, b.getPunti()));
+		return b;
 	}
 
 	// recupero i piani di un edificio
-	public List<Floor> fetchFloors(long id) throws SQLException {
-		return floors.fetchfloors(id);
+	public List<Floor> fetchFloors(long id, List<Point> points) throws SQLException {
+		return floors.fetchFloors(id, points);
 	}
 	
 	// recupero i punti di un edificio
@@ -294,21 +303,22 @@ public class InitializeDB {
 	}
 	
 	// recupero i percorsi di un edificio
-	public List<Path> fetchAllPaths(long id) throws SQLException {
-		return paths.fetchAllPaths(id);
+	public List<Path> fetchAllPaths(long id, List<Point> points) throws SQLException {
+		return paths.fetchAllPaths(id, points);
 	}
 	
 	// recupero le stanze di un edificio
-	public List<Room> fetchRooms(long id) throws SQLException {
-		return rooms.fetchRooms(id);
+	public List<Room> fetchRooms(long id, List<Point> points) throws SQLException, MalformedURLException {
+		return rooms.fetchRooms(id, points);
 	}
 	
 	// UPDATE/CREAZIONE DI UN EDIFICIO////////////////////////////////////////////////
-	public Building generateBuilding(Building b) {		
+	public Building generateBuilding(Building b) throws SQLException, MalformedURLException {		
 		
-		List<Floor> f = b.piani;
-		List<Point> p = b.punti;
-		List<Room> r = b.stanze;
+		List<Floor> floor = b.getPiani();
+		List<Point> point = b.getPunti();
+		List<Room> room = b.getStanze();
+		List<Path> path = b.getPaths();
 		
 		// verifico se si tratta di un update o di una creazione, nel primo
 		// caso cerco di eliminare il viaggio dal DB
@@ -320,63 +330,43 @@ public class InitializeDB {
 		}
 		
 		// creo l'edificio
-	/*	if (!createBuilding(b.id, b.nome, b.latitudine, b.longitudine, 
-				b.numero_di_piani, b.versione)) {
-					Log.e(DATABASE_NAME, "Cannot create building: "+b.id);
+		if (!createBuilding(b)) {
+					Log.e(DATABASE_NAME, "Cannot create building: "+b.toString());
 					return null;
 				}
 		
 		// creo i piani
-		for(int i=0; i < f.size(); i++) {
-			Floor f1 = f.get(i);
-			long new_id = createFloor(b.id, f1.link, f1.bearing, f1.numero_di_piano);
-			if (new_id < 0) {
-				Log.e(DATABASE_NAME, "Error save floors: "+b.id+", element: "+ i);
+		for(Floor f : floor) {
+			if (createFloor(f, b.id) < 0) {
+				Log.e(DATABASE_NAME, "Error save floors: "+f.toString());
 				return null;
-			}
-			f1.setId(new_id);			
+			}			
 		}
 		
 		// creo i punti
-		for(int i=0; i < p.size(); i++) {
-				Point p1 = p.get(i);
-				long new_id = 0;//createPoint(b.id, p1.RFID, p1.posizione, p1.piano, p1.via_accesso);
-				if (new_id < 0) {
-					Log.e(DATABASE_NAME, "Error save points: "+b.id+", element: "+ i);
+		for(Point p : point) {
+				if (createPoint(p, b.id) < 0) {
+					Log.e(DATABASE_NAME, "Error save points: "+p.toString());
 					return null;
 				}
-				
-				p.get(i).setId(new_id);
 			}
 			
-		
-		// creo la lista dei percorsi
-		List<Path> pt = BuildAndFind.buildPaths(p);
-		
-		for(int i=0; i < pt.size(); i++) {
-			Path t = pt.get(i);
-			if (!createPath(b.id, t.costo, t.ascensore, t.scala, t.id_point_A, t.id_point_B)) {
-				Log.e(DATABASE_NAME, "Error save paths: "+b.id+", element: "+ i);
+	
+		for(Path p : path) {
+			if (!createPath(p, b.id)) {
+				Log.e(DATABASE_NAME, "Error save paths: "+p.toString());
 				return null;
 			}
 		}
 		
 		// creo le stanze
-		for (int i=0; i < r.size(); i++) {
-			Room r1 = r.get(i);
-			if (!createRoom(b.id, r1.punto.id, r1.piano, r1.link, r1.nome_stanza, 
-					r1.persone, r1.altro)) {
-				Log.e(DATABASE_NAME, "Error save rooms: "+b.id+", element: "+ i);
+		for (Room r: room) {
+			if (!createRoom(r, b.id)) {
+				Log.e(DATABASE_NAME, "Error save rooms: "+r.toString());
 				return null;
 			}
 		}
-		*/
-		// aggiorno l'edificio
-	/*	b.setFloors(f);
-		b.setPoints(p);
-		b.setPaths(pt);
-		b.setRooms(r);
-		*/
+	
 		return b;
     }	
 }

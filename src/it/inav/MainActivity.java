@@ -1,14 +1,17 @@
 package it.inav;
 
+import it.inav.base_objects.Building;
+import it.inav.communications.Connect;
+import it.inav.database.InitializeDB;
+import it.inav.graphics.MapView;
+import it.inav.sensors.Compass;
+
 import java.io.IOException;
 import java.text.ParseException;
 
 import org.apache.http.client.ClientProtocolException;
 import org.json.JSONException;
 
-import it.inav.communications.Initialize;
-import it.inav.graphics.MapView;
-import it.inav.sensors.Compass;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -25,9 +28,9 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 	
 		
-		// InitializeDB idb = new InitializeDB(this);
-        //idb.open();
-        //idb.close();
+		InitializeDB idb = new InitializeDB(this);
+        idb.open();
+        idb.close();
         
         MapView cv = new MapView(this);
         
@@ -40,7 +43,8 @@ public class MainActivity extends Activity {
         new Compass(this, cv, debug);
         
         try {
-			Initialize.getBuildingFromId(6);
+			Building b = Connect.getBuildingFromId(6);
+			Connect.getImages(b);
 		} catch (ClientProtocolException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
