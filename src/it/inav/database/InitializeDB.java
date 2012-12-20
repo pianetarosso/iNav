@@ -11,6 +11,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -231,12 +232,7 @@ public class InitializeDB {
 		
 	// Crea un edificio
 	public boolean createBuilding(Building b) {
-		
-		deleteBuilding(b.id);
-	
-		return buildings.createBuilding(b.id, b.nome, b.posizione, b.descrizione, b.data_creazione,
-				b.data_update, b.link, b.numero_di_piani, 
-				b.versione, b.foto_link, b.geometria) > -1;
+		return buildings.createBuilding(b) > -1;
 	}
 	
 	// Crea un punto
@@ -286,7 +282,16 @@ public class InitializeDB {
 	// verifico se un edificio è presente nel datatbase (tramite il suo id)
 	public boolean existBuilding(long id) 
 			throws SQLException, MalformedURLException, URISyntaxException {
-		return buildings.fetchBuilding(id) != null;
+		
+		Cursor mCursor = mDb.query(true, Building.BUILDING_TAG, Buildings.allParameters, null, null,
+				null, null, null, null);
+		
+		try {
+			return mCursor.getCount() == 1;
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 	
 	// recupera un edificio specifico (tramite il suo id)

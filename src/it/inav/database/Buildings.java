@@ -4,11 +4,8 @@ package it.inav.database;
 import it.inav.base_objects.Building;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -23,7 +20,7 @@ public class Buildings {
 
 	private SQLiteDatabase mDb;
 
-	private static final String[] allParameters = new String[] {Building.ID,
+	protected static final String[] allParameters = new String[] {Building.ID,
 		Building.NOME, Building.POSIZIONE, Building.DESCRIZIONE, Building.DATA_C,
 		Building.DATA_U, Building.LINK, Building.NUMERO_DI_PIANI, Building.VERSIONE,
 		Building.FOTO, Building.GEOMETRIA};
@@ -32,7 +29,7 @@ public class Buildings {
 	protected static final String Buildings =
 			"CREATE TABLE " 
 					+ Building.BUILDING_TAG + " ( " 
-					+ Building.ID + " LONG PRIMARY KEY, "
+					+ Building.ID + " LONG PRIMARY KEY UNIQUE, "
 					+ Building.NOME + " TEXT,"
 					+ Building.POSIZIONE + " TEXT, " 
 					+ Building.DESCRIZIONE + " TEXT, "
@@ -52,45 +49,33 @@ public class Buildings {
 
 
 	// CREA EDIFICIO
-	protected long createBuilding(
-			long id,
-			String nome,
-			GeoPoint posizione,
-			String descrizione, 
-			Date data_creazione, 
-			Date data_update,
-			URL link,
-			int numero_di_piani,
-			int versione,
-			URI foto_link,
-			GeoPoint[] geometria
-			) {
+	protected long createBuilding(Building b) {
 
 		Log.i(Building.BUILDING_TAG, "Inserting record...");
 
 		ContentValues initialValues = new ContentValues();
 
-		initialValues.put(Building.ID, id);
-		initialValues.put(Building.NOME, nome);
-		initialValues.put(Building.POSIZIONE, "["+posizione.getLatitudeE6()+","+posizione.getLongitudeE6()+"]");
-		initialValues.put(Building.DESCRIZIONE, descrizione);
-		initialValues.put(Building.DATA_C, data_creazione.getTime());
-		initialValues.put(Building.DATA_U, data_update.getTime());
-		initialValues.put(Building.VERSIONE, versione);
-		initialValues.put(Building.NUMERO_DI_PIANI, numero_di_piani);
+		initialValues.put(Building.ID, b.id);
+		initialValues.put(Building.NOME, b.nome);
+		initialValues.put(Building.POSIZIONE, "["+b.posizione.getLatitudeE6()+","+b.posizione.getLongitudeE6()+"]");
+		initialValues.put(Building.DESCRIZIONE, b.descrizione);
+		initialValues.put(Building.DATA_C, b.data_creazione.getTime());
+		initialValues.put(Building.DATA_U, b.data_update.getTime());
+		initialValues.put(Building.VERSIONE, b.versione);
+		initialValues.put(Building.NUMERO_DI_PIANI, b.numero_di_piani);
 		
 		String slink = "";
-		if (link != null)
-			slink = link.toString();
+		if (b.link != null)
+			slink = b.link.toString();
 		initialValues.put(Building.LINK, slink);
 		
 		String foto = "";
-		if (foto_link != null)
-			foto = foto_link.toString();
+		if (b.foto_link != null)
+			foto = b.foto_link.toString();
 		initialValues.put(Building.FOTO, foto);
 
 		String out = "[";
-		for(GeoPoint gp : geometria)
+		for(GeoPoint gp : b.geometria)
 			out += "["+gp.getLatitudeE6()+","+gp.getLongitudeE6()+"],";
 		out = out.substring(0, out.length() - 1) + ']';
 		

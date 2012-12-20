@@ -26,7 +26,7 @@ public class Points {
 	protected static final String Points =
 			"CREATE TABLE " 
 					+ Building.POINTS_TAG +" ( " 
-					+ Point.ID + " LONG PRIMARY KEY, "
+					+ Point.ID + " LONG PRIMARY KEY UNIQUE, "
 					+ Point.RFID_+ " TEXT, "
 					+ Point.X + " INT, " 
 					+ Point.Y + " INT, "
@@ -66,11 +66,6 @@ public class Points {
 		
 		return mDb.insert(Building.POINTS_TAG, null, initialValues);
 	}
-		
-	// CANCELLA UN PUNTO
-	protected boolean deletePoint(long id) {
-		return mDb.delete(Building.POINTS_TAG, Point.ID + "=" + id, null) > 0;
-	}
 	
 	// CANCELLO TUTTI I PUNTI DI UN EDIFICIO
 	protected boolean deleteAllPoints(long id) {
@@ -79,7 +74,8 @@ public class Points {
 	
 	// RECUPERO TUTTI I PUNTI DI UN EDIFICIO (ordinati per piano)
 	protected List<Point> fetchPoints(long id) throws SQLException {
-		Cursor mCursor = mDb.query(true, Building.POINTS_TAG, allParameters, 
+		Log.i("id_b", ""+id);
+		Cursor mCursor = mDb.query(false, Building.POINTS_TAG, allParameters, 
 				Building.BUILDING_TAG + "=" + id, null,	null, null, Point.PIANO+" ASC", null);
 		if (mCursor != null)  
 			mCursor.moveToFirst();
@@ -95,6 +91,7 @@ public class Points {
 		List <Point> output = new ArrayList<Point>();
 		
 		if (cursor!=null) {
+			cursor.moveToFirst();
 			do {
 				output.add(cursorToPoint(cursor));
 			} while (cursor.moveToNext());
@@ -103,6 +100,9 @@ public class Points {
 	}
 	
 	private Point cursorToPoint(Cursor cursor) {
+		Log.i("ll", ""+cursor.getColumnCount()+" "+cursor.getCount());
+		for(String y :cursor.getColumnNames())
+			Log.i("jjkh", y);
 		return new Point(
 				cursor.getLong(cursor.getColumnIndex(Point.ID)),
 				cursor.getString(cursor.getColumnIndex(Point.RFID_)),

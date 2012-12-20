@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.SQLException;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
 import com.google.android.maps.GeoPoint;
@@ -143,8 +144,23 @@ public class Building {
         	
         idb.close();
 		
+        loadImages(b);
+        
         return b;
 	}
+	
+	
+	// metodo per caricare le immagini
+	private static void loadImages(Building b) {
+		
+		if (b.foto_link != null)
+			b.foto = BitmapFactory.decodeFile(b.foto_link.getPath());
+		
+		for(Floor f : b.getPiani())
+			f.immagine = BitmapFactory.decodeFile(f.link_immagine.getPath());
+		
+	}
+	
 	
 	// Metodo per recuperare TUTTI i building dal database
 	public static List<Building> getBuildings(Context context) 

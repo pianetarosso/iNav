@@ -1,8 +1,15 @@
 package it.inav;
 
 import it.inav.base_objects.Building;
+import it.inav.communications.Connect;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.List;
+
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -29,7 +36,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_layout);
 
-
+	
 		loadButtons();
 		testConnection();
 

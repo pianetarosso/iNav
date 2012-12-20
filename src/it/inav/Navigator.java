@@ -21,9 +21,33 @@ public class Navigator extends Activity {
 		
 		long id = this.getIntent().getLongExtra("id", 0);
 		
+		// verifica che id sia positivo
+		// verifica che sia possibile caricare le immagini
+		
+		// aggiungere gesture per lo zoom
+		// aggiungere touch per navigare la mappa
+		
+		// aggiungere il resume dalla pausa
+		
+		// drawing sulla mappa del percorso
+		// zoom automatico per mostrare il percorso fino al successivo "marker"
+		// freccia per indicare la direzione
+		
+		// campo informazioni (salire al secondo piano...)
+		// aggiungere pulsante "emergenza" ( ma per questo servirebbe anche introdurre una nuova modalità sul web)
+		// aggiungere campo "solo ascensore"
+		// campo per cambiare piano
+		
+		// rilevatore continuo di rfid
+		
+		// implementare ricerca del percorso più breve con dijkstra
+		// implementare il calcolo del costo in base alla distanza tra due punti 
+		// (con valori particolari per ascensori e scale)
+		
+		
 		Log.i("id", ""+id);
 		
-		MapView cv = new MapView(this); 
+		MapView cv = new MapView(this, id); 
 
 
         setContentView(cv);

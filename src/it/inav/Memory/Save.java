@@ -7,10 +7,12 @@ import it.inav.database.InitializeDB;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import android.content.Context;
+import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.os.Environment;
 
@@ -22,7 +24,7 @@ public class Save {
 	private static final String BUILDING_FOTO = "foto.jpg";
 	
 	public static void SaveBuilding(Building b, Context context) 
-			throws FileNotFoundException, URISyntaxException {
+			throws FileNotFoundException, URISyntaxException, SQLException, MalformedURLException {
 		
 		// verifico se esiste già una cartella per quel building
 		File externalStorage = Environment.getExternalStorageDirectory();
@@ -65,7 +67,7 @@ public class Save {
 		
 		InitializeDB idb = new InitializeDB(context);
         idb.open();
-        idb.createBuilding(b);
+        idb.generateBuilding(b);
         idb.close();
 		
 	}
