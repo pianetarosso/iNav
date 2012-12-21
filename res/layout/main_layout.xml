@@ -20,5 +20,14 @@
         android:layout_gravity="center_horizontal"
         android:layout_margin="@dimen/button_space"
         android:text="@string/start_navigation" />
+    
+    <Button
+        android:id="@+id/edifici_danneggiati"
+        android:layout_width="200dip"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="@dimen/button_space"
+        android:clickable="false" 
+        android:visibility="gone" />
 
 </LinearLayout>

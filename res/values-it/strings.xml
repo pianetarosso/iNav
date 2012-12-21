@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_buildings">Nessun edificio salvato</string>
+    <string name="no_connection">Nessuna connessione attiva,\n alcune funzionalità saranno disabilitate.</string>
+    <string name="select_building">Seleziona l\'edificio:</string>
+    <string name="error_loading_building">Errore nel caricamento dell\'edificio</string>
+    <string name="damaged">Ripara (#)</string>
+    <string name="repair_message">iNavloadButtons();nuovamente gli edifici danneggiati.\nQuesta operazione richiederà tempo dipendente dalla velocità della connessione.</string>
+    <string name="all_buildings_repaired">Tutti gli edifici sono stati riparati!</string>
+    <string name="download_problem">Errore durante il download. Annullato!</string>
+    <string name="cannot_repair"># falliti!</string>
+</resources>

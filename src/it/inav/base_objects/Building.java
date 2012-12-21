@@ -1,7 +1,9 @@
 package it.inav.base_objects;
 
+import it.inav.Memory.SP;
 import it.inav.database.InitializeDB;
 
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -130,34 +132,49 @@ public class Building {
 	}
 
 	// Metodo per recuperare il building dal database
-	public static Building getBuilding(Context context, long id) 
-			throws SQLException, MalformedURLException, URISyntaxException {
+	public static Building getBuilding(Context context, long id) {
 		
-		Building b = null;
-		
-		InitializeDB idb = new InitializeDB(context);
-        idb.open();
-        
-        
-        if (idb.existBuilding(id));
-        	 b = idb.fetchBuilding(id);
-        	
-        idb.close();
-		
-        loadImages(b);
-        
-        return b;
+		try {
+			
+			Building b = null;
+			
+			InitializeDB idb = new InitializeDB(context);
+	        idb.open();
+	        
+	        
+	        if (idb.existBuilding(id));
+	        	 b = idb.fetchBuilding(id);
+	        	
+	        idb.close();
+			
+	        loadImages(b);
+
+	        return b;
+	        
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+			SP.addDamagedBuilding(context, id);
+			return null;
+		}
 	}
 	
 	
 	// metodo per caricare le immagini
-	private static void loadImages(Building b) {
+	private static void loadImages(Building b) 
+			throws FileNotFoundException {
 		
-		if (b.foto_link != null)
+		if (b.foto_link != null) {
 			b.foto = BitmapFactory.decodeFile(b.foto_link.getPath());
+			if (b.foto == null)
+				throw new FileNotFoundException();
+		}
 		
-		for(Floor f : b.getPiani())
+		for(Floor f : b.getPiani()) {
 			f.immagine = BitmapFactory.decodeFile(f.link_immagine.getPath());
+			if (f.immagine == null)
+				throw new FileNotFoundException();
+		}
 		
 	}
 	
@@ -371,6 +388,13 @@ public class Building {
 			out += r.toString();
 
 		return out;
+	}
+
+	public void freeMemory() {
+		foto.recycle();
+		
+		for(Floor f : piani)
+			f.immagine.recycle();
 	}
 }
 

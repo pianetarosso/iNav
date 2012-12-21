@@ -74,7 +74,7 @@ public class Points {
 	
 	// RECUPERO TUTTI I PUNTI DI UN EDIFICIO (ordinati per piano)
 	protected List<Point> fetchPoints(long id) throws SQLException {
-		Log.i("id_b", ""+id);
+		
 		Cursor mCursor = mDb.query(false, Building.POINTS_TAG, allParameters, 
 				Building.BUILDING_TAG + "=" + id, null,	null, null, Point.PIANO+" ASC", null);
 		if (mCursor != null)  
@@ -100,9 +100,7 @@ public class Points {
 	}
 	
 	private Point cursorToPoint(Cursor cursor) {
-		Log.i("ll", ""+cursor.getColumnCount()+" "+cursor.getCount());
-		for(String y :cursor.getColumnNames())
-			Log.i("jjkh", y);
+		
 		return new Point(
 				cursor.getLong(cursor.getColumnIndex(Point.ID)),
 				cursor.getString(cursor.getColumnIndex(Point.RFID_)),

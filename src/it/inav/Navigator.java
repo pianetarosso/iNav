@@ -1,15 +1,25 @@
 package it.inav;
 
+import it.DiarioDiViaggio.R;
+import it.inav.base_objects.Building;
 import it.inav.graphics.MapView;
 import it.inav.sensors.Compass;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
 
 public class Navigator extends Activity {
 
 	// variabile per inizializzare il debug
 	private boolean debug = true;
+	private String[] b;
+	private MapView cv;
+	private Compass compass;
 	
 	
 	@Override
@@ -19,7 +29,8 @@ public class Navigator extends Activity {
 		
 		setContentView(R.layout.activity_main_);
 		
-		long id = this.getIntent().getLongExtra("id", 0);
+		b = this.getIntent().getStringArrayExtra("building");
+		
 		
 		// verifica che id sia positivo
 		// verifica che sia possibile caricare le immagini
@@ -45,16 +56,58 @@ public class Navigator extends Activity {
 		// (con valori particolari per ascensori e scale)
 		
 		
-		Log.i("id", ""+id);
 		
-		MapView cv = new MapView(this, id); 
-
-
+		cv = new MapView(this); 
         setContentView(cv);
-
-        new Compass(this, cv, debug);
+        compass = new Compass(this, cv, debug);
 	}
 
+	@Override
+	protected void onStart() {
+		
+		loadBuilding();
+		super.onStart();
+	}
+
+	
+	private void loadBuilding() {
+		
+		// aggiungere un'asynctask???????
+		long id = Long.parseLong(b[0]);
+		Building b = Building.getBuilding(this, id);
+		
+		if (b == null) 
+			showError();
+		else
+			cv.setFloor(b.getPiani().get(0));
+		
+	}
+	
+	// nel caso di problemi nel caicamento di un edificio comunico all'utente
+	// che c'è stato un errore, aggiungo un valore ai buildings danneggiati
+	// nelle SP e ritorno al main "pulendo" le activities precendeti
+	private void showError() {
+		
+		final Context context = this;
+		
+		Builder ad = new AlertDialog.Builder(this);
+		
+		ad.setMessage(R.string.error_loading_building);
+		ad.setCancelable(false);
+		ad.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+				Intent i = new Intent(context, MainActivity.class);
+				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);  
+				context.startActivity(i);
+			}
+		});
+		ad.show();
+	}
+	
+	
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub
@@ -66,5 +119,18 @@ public class Navigator extends Activity {
 		// TODO Auto-generated method stub
 		super.onResume();
 	}
+	
+	@Override
+	public boolean onKeyDown(int keyCode, android.view.KeyEvent event)  {
+    	// intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
+		
+    	boolean test;
+    	
+    	test = (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) ;
+    	
+    	
+
+	    return super.onKeyDown(keyCode, event);
+	}    
 
 }

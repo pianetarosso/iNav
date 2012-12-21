@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">iNav</string>
-    <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
-    <string name="no_buildings">Nessun edificio salvato</string>
-    <string name="no_connection">Nessuna connessione attiva,\n alcune funzionalità saranno disabilitate.</string>
-    <string name="select_building">Seleziona l\'edificio:</string>
+    <string name="find_building">Find a Building</string>
+    <string name="start_navigation">Start to navigate!</string>
+    <string name="no_buildings">No buildings to show</string>
+    <string name="no_connection">No active connection found.\nSome features will be disabled.</string>
+    <string name="select_building">Select building:</string>
+    <string name="error_loading_building">Error during the loading of the building!</string>
+    <string name="ok">OK</string>
+    <string name="no">NO</string>
+    <string name="download">Download</string>
+    <string name="damaged">Repair (#)</string>
+    <string name="repair_message">iNav will try to re-download the damaged buildings.\nThis will take some time, depending on your connection speed.</string>
+    <string name="downloading">Downloading\...</string><string name="all_buildings_repaired">All buildings have been repaired!</string>    <string name="download_problem">There was an error during download. Aborted!</string>
+    <string name="cannot_repair"># failed!</string>
 </resources>
