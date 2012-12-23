@@ -9,4 +9,7 @@
     <string name="all_buildings_repaired">Tutti gli edifici sono stati riparati!</string>
     <string name="download_problem">Errore durante il download. Annullato!</string>
     <string name="cannot_repair"># falliti!</string>
+    <string name="find_message">Seleziona cosa stai cercando:</string>
+    <string name="rooms">Stanze</string>
+    <string name="people">persone</string>
 </resources>

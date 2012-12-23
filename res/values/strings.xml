@@ -15,4 +15,7 @@
     <string name="repair_message">iNav will try to re-download the damaged buildings.\nThis will take some time, depending on your connection speed.</string>
     <string name="downloading">Downloading\...</string><string name="all_buildings_repaired">All buildings have been repaired!</string>    <string name="download_problem">There was an error during download. Aborted!</string>
     <string name="cannot_repair"># failed!</string>
+    <string name="find_message">Select what you are looking for:</string>
+    <string name="rooms">Rooms</string>
+    <string name="people">People</string>
 </resources>

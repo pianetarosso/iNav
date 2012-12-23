@@ -1,18 +1,22 @@
 package it.inav.graphics;
 
 import it.inav.base_objects.Floor;
+import it.inav.base_objects.Pixel;
+import it.inav.base_objects.Point;
 
-import java.io.InputStream;
+import java.util.List;
 
-import android.R.color;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Picture;
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+import android.widget.RelativeLayout;
 
 public class MapView extends View {
 	
@@ -20,8 +24,16 @@ public class MapView extends View {
 	
 	Drawable bd;
 	
-	private Floor selected_floor = null;
+	public Floor selected_floor = null;
+	private List<Floor> floors = null;
 	private Bitmap bmp;
+	
+	private float zoom;
+	private float min_zoom;
+	
+	private Pixel screen_center = null;
+	private Pixel image_center = null;
+
 	
 	
 	public MapView(Context context, AttributeSet attrs, int defStyle) {
@@ -36,60 +48,175 @@ public class MapView extends View {
 		super(context);
 	}
 	
-	protected void init(Context context, long building_id) {
+	public void init(List<Floor> floors) {
+		this.floors = floors;
 		setFocusable(true);
 	}
 
-	
-	
-	
-
-	public void setFloor(Floor floor) {
-		selected_floor = floor;
-		if (bmp != null)
-			bmp.recycle();
-		bmp = Bitmap.createScaledBitmap(selected_floor.immagine, 200, 200, false);
+	public void setFloor(int floor) {
+		
+		for(Floor f : floors) 
+			if (f.numero_di_piano == floor) {
+				this.selected_floor = f;
+				break;
+			}
+		
+		if (bmp != selected_floor.immagine) {
+			
+			bmp = selected_floor.immagine;
+			 
+			setInitialZoom();
+		}
+			
 	}
 	
+	private void setInitialZoom() {
 		
+		
+		if (screen_center == null)
+			return;
+		
+		// recupero la dimensione dell'immagine
+		int image_width = bmp.getWidth();
+		int image_heigth = bmp.getHeight();
+		
+		
+		int longest_i = image_width;
+		if (longest_i < image_heigth)
+			longest_i = image_heigth;
+		
+		int longest_s = screen_center.x * 2;
+		
+		if (longest_s < screen_center.y * 2)
+			longest_s = screen_center.y * 2;
+		
+		float zoom = (float)longest_s / longest_i;
+			
+			this.min_zoom = zoom;
+			this.zoom = zoom;
+			
+		setImageCenter(null);
+	}
 	
+	
+	private void setZoom(float zoom) {
+		
+		if (zoom < min_zoom)
+				this.zoom = min_zoom;
+			
+		else if (zoom > 1)
+			this.zoom = 1;
+		
+		else 
+			this.zoom = zoom;
+			
+		this.invalidate();
+		
+	}
+	
+	public void goToPoint(Point point) {
+		
+		 setZoom((float)(this.zoom + 0.21));
+		 
+		 setImageCenter(point.posizione);
+		 
+	}
+	
+	private void setImageCenter(Pixel posizione) {
+		
+		if (posizione != null) 
+			image_center = new Pixel(posizione.x, posizione.y);
+		else 
+			image_center = new Pixel(bmp.getWidth(), bmp.getHeight());
+	}
+	
+	
+	private void prepareImage(Canvas canvas) {
+		
+		canvas.rotate((float)(bearing - selected_floor.bearing), screen_center.x, screen_center.y);
+		
+		
+		// scalo l'immagine 
+		Matrix matrix = new Matrix();
+		matrix.setScale(zoom, zoom);
+		
+		Paint drawPaint = new Paint();
+		drawPaint.setAntiAlias(true);
+		drawPaint.setFilterBitmap(true);
+		
+		float centerScaledWidth = image_center.x * zoom / 2;
+		float centerScaledHeigth = image_center.y * zoom / 2;
+		
+		matrix.postTranslate(screen_center.x -  centerScaledWidth, 
+				screen_center.y - centerScaledHeigth);
+		
+		canvas.drawBitmap(bmp, matrix, drawPaint);
+		
+		canvas.save();
+		canvas.restore();
+	}
 
-	@Override
-	public void draw(Canvas canvas) {
-		int px = getMeasuredWidth() / 2;
-		int py = getMeasuredHeight() /2 ;
-		
-		
-		if (selected_floor != null) {
-			Matrix matrix = new Matrix();
+	private void drawMarkers(Canvas canvas) {
+			Paint drawPaint = new Paint();
+			drawPaint.setAntiAlias(true);
+			drawPaint.setColor(Color.RED);
 			
-			// i punti sono le coordinate su cui si applica la rotazione
-			matrix.postRotate( (float)(bearing - selected_floor.bearing), bmp.getWidth()/2, bmp.getHeight()/2 );
+			canvas.drawCircle(screen_center.x, screen_center.y, 2, drawPaint);
 			
-			
-			canvas.drawBitmap(bmp, matrix, null);
-		
 			canvas.save();
 			canvas.restore();
+	}
+	
+	private void setScreenCenter() {
+		
+		if (screen_center != null)
+			return; 
+					
+		// recupero la dimensione dello schermo
+		int screen_height = getMeasuredHeight();
+		int screen_width = getMeasuredWidth();
+			
+		if ((screen_height == 0) || (screen_width == 0))
+				return;
+						
+		screen_center = new Pixel(screen_width / 2, screen_height / 2);
+		setInitialZoom();
+	}
+	
+	@Override
+	public void draw(Canvas canvas) {
+		
+		setScreenCenter();
+		
+		if (selected_floor != null) {
 			
 			
-		}
-		//canvas.rotate(-bearing, px, py);
-
-//		canvas.drawLine(px, py-20, px, py+20, markerPaint);
-	//	canvas.save();
+			
+			
+			prepareImage(canvas);
+			drawMarkers(canvas);
+			
+		//	canvas.rotate((float)(bearing - selected_floor.bearing),  300, 300);
+			
+		
+		
+/*
+		canvas.drawLine(px, py-20, px, py+20, drawPaint);
+	canvas.save();
 		
 		// Draw the marker every 15 degrees and text every 45.
-	/*	for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < 24; i++) {
 			// Draw a marker.
-			canvas.drawLine(px, py-20, px, py-20+10, markerPaint);
+			canvas.drawLine(px, py-20, px, py-20+10, drawPaint);
 			canvas.save();
 		
 			canvas.restore();
 			canvas.rotate(15, px, py);
-		}*/
+		}
 		
+		*/
 		
+		}
 
 	}
 
@@ -97,10 +224,14 @@ public class MapView extends View {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		int measuredWidth = measure(widthMeasureSpec);
 		int measuredHeight = measure(heightMeasureSpec);
-		int d = Math.min(measuredWidth, measuredHeight);
-		setMeasuredDimension(d, d);
+	//	int d = Math.min(measuredWidth, measuredHeight);
+		setMeasuredDimension(measuredWidth, measuredHeight);
 	}
 
+
+
+	
+	
 	private int measure(int measureSpec) {
 		int result = 0;
 		// Decode the measurement specifications.
@@ -114,6 +245,7 @@ public class MapView extends View {
 			// always return the full available bounds.
 			result = specSize;
 		}
+		Log.i("result", result+"");
 		return result;
 	}
 

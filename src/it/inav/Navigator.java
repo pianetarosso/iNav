@@ -1,6 +1,5 @@
 package it.inav;
 
-import it.DiarioDiViaggio.R;
 import it.inav.base_objects.Building;
 import it.inav.graphics.MapView;
 import it.inav.sensors.Compass;
@@ -10,8 +9,8 @@ import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.view.View;
 
 public class Navigator extends Activity {
 
@@ -20,6 +19,7 @@ public class Navigator extends Activity {
 	private String[] b;
 	private MapView cv;
 	private Compass compass;
+	private Find find;
 	
 	
 	@Override
@@ -27,7 +27,7 @@ public class Navigator extends Activity {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		
-		setContentView(R.layout.activity_main_);
+		setContentView(R.layout.navigator_layout);
 		
 		b = this.getIntent().getStringArrayExtra("building");
 		
@@ -57,8 +57,9 @@ public class Navigator extends Activity {
 		
 		
 		
-		cv = new MapView(this); 
-        setContentView(cv);
+		cv = (MapView) this.findViewById(R.id.map); 
+        //setContentView(cv);
+        
         compass = new Compass(this, cv, debug);
 	}
 
@@ -66,6 +67,8 @@ public class Navigator extends Activity {
 	protected void onStart() {
 		
 		loadBuilding();
+		
+		
 		super.onStart();
 	}
 
@@ -74,16 +77,19 @@ public class Navigator extends Activity {
 		
 		// aggiungere un'asynctask???????
 		long id = Long.parseLong(b[0]);
-		Building b = Building.getBuilding(this, id);
+		Building building = Building.getBuilding(this, id);
 		
-		if (b == null) 
+		if (building == null) 
 			showError();
-		else
-			cv.setFloor(b.getPiani().get(0));
+		else {
+			cv.init(building.getPiani());
+			cv.setFloor(building.getPiani().get(0).numero_di_piano);
+			find = new Find(building, this);
+		}
 		
 	}
 	
-	// nel caso di problemi nel caicamento di un edificio comunico all'utente
+	// nel caso di problemi nel caricamento di un edificio comunico all'utente
 	// che c'è stato un errore, aggiungo un valore ai buildings danneggiati
 	// nelle SP e ritorno al main "pulendo" le activities precendeti
 	private void showError() {
@@ -120,14 +126,14 @@ public class Navigator extends Activity {
 		super.onResume();
 	}
 	
+	
+	// intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
 	@Override
 	public boolean onKeyDown(int keyCode, android.view.KeyEvent event)  {
-    	// intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
+    	
 		
-    	boolean test;
-    	
-    	test = (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) ;
-    	
+    	if (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) 
+    		find.showQuestion(cv);
     	
 
 	    return super.onKeyDown(keyCode, event);
