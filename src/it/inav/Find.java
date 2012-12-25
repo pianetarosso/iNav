@@ -128,8 +128,8 @@ public class Find {
 				dialog.dismiss();
 				
 				Room selected = objects.get(list[which]);
-				cv.setFloor(selected.punto.piano);
-				cv.goToPoint(selected.punto);
+			//	cv.setFloor(selected.punto.piano);
+			//	cv.goToPoint(selected.punto);
 				// aggiungere anche lo zoom della mappa sul punto in questione
 			}
 		});

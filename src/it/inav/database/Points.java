@@ -1,7 +1,6 @@
 package it.inav.database;
 
 import it.inav.base_objects.Building;
-import it.inav.base_objects.Pixel;
 import it.inav.base_objects.Point;
 
 import java.util.ArrayList;
@@ -11,6 +10,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.PointF;
 import android.util.Log;
 
 public class Points {
@@ -48,7 +48,7 @@ public class Points {
 			long id,
 			long edificio,
 			String RFID,
-			Pixel p, 
+			PointF p, 
 			int piano,
 			boolean ingresso
 			) { 

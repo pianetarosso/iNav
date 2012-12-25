@@ -8,7 +8,6 @@ import org.openintents.sensorsimulator.hardware.SensorManagerSimulator;
 
 import android.content.Context;
 import android.hardware.SensorManager;
-import android.util.Log;
 
 public class Compass {
 	

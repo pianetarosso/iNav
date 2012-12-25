@@ -6,6 +6,8 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.PointF;
+
 public class Point {
 
 	// COSTANTI PER PARSING ///////////////
@@ -21,7 +23,7 @@ public class Point {
 	// VARIABILI ///////////////
 	public long id;
 	public String RFID;
-	public Pixel posizione;
+	public PointF posizione;
 	public int piano;
 	public boolean ingresso;
 	////////////////////////////
@@ -38,7 +40,7 @@ public class Point {
 
 		this.id = id;
 		this.RFID = RFID;
-		this.posizione = new Pixel(x,y);
+		this.posizione = new PointF(x,y);
 		this.piano = piano;
 		this.ingresso = ingresso;
 
