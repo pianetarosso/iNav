@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -289,13 +290,81 @@ public class MapView extends ImageView  {
 	private void drawMarkers(Canvas canvas) {
 		Paint drawPaint = new Paint();
 		drawPaint.setAntiAlias(true);
+		
+		float offset_x = bmp.getWidth() / 2 - image_center.x;
+		float offset_y = bmp.getHeight() / 2 - image_center.y;
 
+		for (Point p : selected_floor.punti) {
+			
+			PointF posizione = p.posizione;
+			
+			
+			float x = (posizione.x + offset_x) * zoom;
+			float y = (posizione.y + offset_y) * zoom;
+			
+			//Log.i("xy",  x + " "+y);
+			
+			drawPaint.setColor(Color.WHITE);
+			canvas.drawCircle(x, y, MARKER_DIAMETER + 1, drawPaint);
+	
+			drawPaint.setColor(Color.RED);
+			canvas.drawCircle(x, y, MARKER_DIAMETER, drawPaint);
+			
+			/*
+			drawPaint.setColor(Color.WHITE);
+			canvas.drawCircle(screen_center.x, screen_center.y, MARKER_DIAMETER + 1, drawPaint);
+	
+			drawPaint.setColor(Color.RED);
+			canvas.drawCircle(screen_center.x, screen_center.y, MARKER_DIAMETER, drawPaint);
+			*/
+		}
+		canvas.save();
+		canvas.restore();
+	}
+	
+	private void drawArrow(Canvas canvas) {
+		
+		Paint drawPaint = new Paint();
+		drawPaint.setAntiAlias(true);
+		
+		float x = screen_center.x;
+		float y = screen_center.y;
+		
+		Matrix r = new Matrix();
+		r.postRotate(-bearing, x, y);
+		
+		Path whitePath = new Path();
+		
+		whitePath.reset();
+		whitePath.moveTo(x, y+6f);
+		whitePath.lineTo(x+11f, y+11f);
+		whitePath.lineTo(x, y-11f);
+		whitePath.lineTo(x-11f, y+11f);
+		whitePath.lineTo(x, y+6f);
+		whitePath.close();
+		
+		
+		Path bluePath = new Path();
+		
+		bluePath.reset();
+		bluePath.moveTo(x, y+5f);
+		bluePath.lineTo(x+10f, y+10f);
+		bluePath.lineTo(x, y-10f);
+		bluePath.lineTo(x-10f, y+10f);
+		bluePath.lineTo(x, y+5f);
+		bluePath.close();
+		
+		
+		whitePath.transform(r);
+		bluePath.transform(r);
+		
 		drawPaint.setColor(Color.WHITE);
-		canvas.drawCircle(screen_center.x, screen_center.y, MARKER_DIAMETER + 1, drawPaint);
+		canvas.drawPath(whitePath, drawPaint);
+		
+		drawPaint.setColor(Color.BLUE);
+		canvas.drawPath(bluePath, drawPaint);
 
-		drawPaint.setColor(Color.RED);
-		canvas.drawCircle(screen_center.x, screen_center.y, MARKER_DIAMETER, drawPaint);
-
+		
 		canvas.save();
 		canvas.restore();
 	}
@@ -320,14 +389,15 @@ public class MapView extends ImageView  {
 		setScreenCenter();
 
 		if (selected_floor != null) {
-
+			
 			// se si sta effettuando qualche operazione di touch, blocco la rotazione
 			canvas.rotate(bearing, screen_center.x, screen_center.y);
 			this.canvas = canvas.getMatrix();
 
 			prepareImage(canvas);
 			drawMarkers(canvas);
-
+			drawArrow(canvas);
+			
 		}
 
 	}

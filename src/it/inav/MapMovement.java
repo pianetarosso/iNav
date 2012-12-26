@@ -74,9 +74,6 @@ public class MapMovement implements OnTouchListener {
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 
-		// Dump touch event to log
-		dumpEvent(event);
-
 
 		// tre casi:
 
