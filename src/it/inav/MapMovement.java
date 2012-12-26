@@ -41,16 +41,34 @@ public class MapMovement implements OnTouchListener {
 		float[] pts = {x, y};
 		
 		Matrix m = new Matrix();
-		m.setRotate(mapView.getBearing());
-		m.invert(m);
-		m.mapPoints(pts);
 		
-		mapView.image.invert(m);
-		m.mapPoints(pts);
+		// elimino lo zoom e la traslazione
+	//	mapView.image.invert(m);
+		//m.setRotate(-mapView.getBearing());
+	//	m.mapPoints(pts);
 
 		return new PointF(pts[0], pts[1]);
 	}
 
+	private float[] calculateDistance(PointF a, PointF b) {
+		
+		float[] pts = {a.x, a.y, b.x, b.y};
+		
+		Matrix m = new Matrix();
+		
+		// inverto la rotazione
+		//mapView.canvas.invert(m);
+		//m.invert(m);
+		//m.mapPoints(pts);
+		
+		//mapView.image.mapPoints(pts);
+		//m.mapPoints(pts);
+		
+		float diff_x = (pts[2] - pts[0]);// * mapView.zoom;// mapView.zoom;
+		float diff_y = (pts[3] - pts[1]);// * mapView.zoom;// mapView.zoom;
+		
+		return new float[] {diff_x, diff_y};
+	}
 
 	// ONTOUCH
 	@Override
@@ -73,7 +91,7 @@ public class MapMovement implements OnTouchListener {
 		case MotionEvent.ACTION_DOWN:
 
 		
-			start = convertPoints(event.getX(), event.getY());
+			start.set(event.getX(), event.getY());
 			Log.d("mode", "mode=DRAG");
 			mode = DRAG;
 			// blocco il movimento
@@ -100,8 +118,10 @@ public class MapMovement implements OnTouchListener {
 		case MotionEvent.ACTION_MOVE:
 			if (mode == DRAG) {
 
-				PointF new_center = convertPoints(event.getX(), event.getY());
-				mapView.setMovement(start.x - new_center.x, start.y - new_center.y);
+				boolean test = mapView.setMovement(start, new PointF(event.getX(), event.getY()));
+				
+				 if (test)
+					 start.set(event.getX(), event.getY());
 			}
 			else if (mode == ZOOM) {
 				float newDist = spacing(event);
@@ -113,10 +133,9 @@ public class MapMovement implements OnTouchListener {
 			}
 			break;
 		}
-
-
+		
 		// Dump touch event to log
-		dumpEvent(event);
+		//dumpEvent(event);
 
 		// NECESSARIO PER LA LETTURA DEL TOUCH!!!!!
 		return true;
@@ -125,19 +144,15 @@ public class MapMovement implements OnTouchListener {
 	/** Determine the space between the first two fingers */
 	@SuppressLint("FloatMath")
 	private float spacing(MotionEvent event) {
-		PointF zero = convertPoints(event.getX(0), event.getY(0));
-		PointF uno = convertPoints(event.getX(1), event.getY(1));
-		float x = zero.x - uno.x;
-		float y = zero.y - uno.y;
+		float x = event.getX(0) - event.getX(1);
+		float y = event.getY(0) - event.getY(1);
 		return FloatMath.sqrt(x * x + y * y);
 	}
 
 	/** Calculate the mid point of the first two fingers */
 	private void midPoint(PointF point, MotionEvent event) {
-		PointF zero = convertPoints(event.getX(0), event.getY(0));
-		PointF uno = convertPoints(event.getX(1), event.getY(1));
-		float x = zero.x + uno.x;
-		float y = zero.y + uno.y;
+		float x = event.getX(0) + event.getX(1);
+		float y = event.getY(0) + event.getY(1);
 		point.set(x / 2, y / 2);
 	}
 

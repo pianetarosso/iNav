@@ -13,6 +13,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.widget.ImageView;
 
 public class MapView extends ImageView  {
@@ -27,7 +28,7 @@ public class MapView extends ImageView  {
 	private Bitmap bmp;
 
 	// variabili che tengono traccia dello zoom massimo e minimo
-	private float zoom;
+	public float zoom;
 	private float min_zoom;
 
 	// punti che identificano il centro dello schermo e dell'immagine
@@ -44,6 +45,7 @@ public class MapView extends ImageView  {
 	// COSTANTI
 	private static final int MARKER_DIAMETER = 3;
 	private static final int MAX_ZOOM = 1;
+	private static final float MIN_ROTATION = (float) 0.1;
 
 
 	// COSTRUTTORI /////////////////////////////////////////////////////
@@ -106,6 +108,20 @@ public class MapView extends ImageView  {
 			image_center = new PointF(posizione.x, posizione.y);
 		else 
 			image_center = new PointF(bmp.getWidth() / 2, bmp.getHeight() / 2);
+
+		// scalo l'immagine 
+		image = new Matrix();
+		image.setScale(zoom, zoom);
+
+
+
+		float centerScaledWidth = image_center.x * zoom;
+		float centerScaledHeigth = image_center.y * zoom;
+
+		// faccio la translazione dell'immagine per centrarla
+		image.postTranslate(
+				screen_center.x -  centerScaledWidth, 
+				screen_center.y - centerScaledHeigth);
 	}
 
 	// calcolo e imposto il centro dello schermo
@@ -176,12 +192,50 @@ public class MapView extends ImageView  {
 		setZoom((float) 0.8, point.posizione);
 	}
 
-	public void setMovement(float f, float g) {
+	public Matrix canvas;
+	public boolean setMovement(PointF start, PointF stop) {//float dx, float dy) {
 
-		image_center.x += f;
-		image_center.y += g;
+		// INVERSIONE DELLA ROTAZIONE //////////////////////////////////////////
+		float[] movement = {start.x, start.y, stop.x, stop.y};
 
-		this.invalidate();
+		Matrix c_t = new Matrix();
+		canvas.invert(c_t);
+		c_t.mapPoints(movement);
+
+		float dx = movement[2] - movement[0];
+		float dy = movement[3] - movement[1];
+
+		////////////////////////////////////////////////////////////////////////
+
+
+		// controllo della posizione dell'immagine rispetto al centro
+		float[] new_center = {screen_center.x, screen_center.y};
+		
+		Matrix copy = new Matrix();
+		copy.set(image);
+		copy.postTranslate(dx, dy);
+		
+		Matrix translated = new Matrix();
+		copy.invert(translated);
+		
+		translated.mapPoints(new_center);
+
+		int safe_distance = MARKER_DIAMETER;
+
+		// verifico se il punto centrale di rotazione è ancora all'interno dell'immagine
+		if ((new_center[0] > safe_distance) && (new_center[0] <= bmp.getWidth() - safe_distance) && 
+				(new_center[1] >= safe_distance) && (new_center[1] <= bmp.getHeight() - safe_distance)) {
+
+			image_center.x = new_center[0];
+			image_center.y = new_center[1];
+
+			image.set(copy);
+			this.invalidate();
+
+			return true;
+		}
+		else
+			return false;
 	}
 
 	public void setZoom(float zoom, PointF point) {
@@ -195,8 +249,15 @@ public class MapView extends ImageView  {
 	public void setBearing(float bearing) {
 
 		try {
-			if (!isMoving)	
-				this.bearing = (float) (-bearing + selected_floor.bearing);
+			if (!isMoving)	{
+				float new_bearing = (float) (-bearing + selected_floor.bearing);
+
+				if (Math.abs(this.bearing - new_bearing) > MIN_ROTATION ) {
+					//image.postRotate(this.bearing - new_bearing, screen_center.x, screen_center.y);
+					this.bearing = new_bearing;
+				}
+
+			}
 		} catch (NullPointerException e) {this.bearing = 0;}
 	}
 
@@ -212,21 +273,10 @@ public class MapView extends ImageView  {
 
 	private void prepareImage(Canvas canvas) {
 
-		// scalo l'immagine 
-		image = new Matrix();
-		image.setScale(zoom, zoom);
-
 		Paint drawPaint = new Paint();
 		drawPaint.setAntiAlias(true);
 		drawPaint.setFilterBitmap(true);
 
-		float centerScaledWidth = image_center.x * zoom;
-		float centerScaledHeigth = image_center.y * zoom;
-
-		// faccio la translazione dell'immagine per centrarla
-		image.postTranslate(
-				screen_center.x -  centerScaledWidth, 
-				screen_center.y - centerScaledHeigth);
 
 		canvas.drawBitmap(bmp, image, drawPaint);
 
@@ -273,7 +323,7 @@ public class MapView extends ImageView  {
 
 			// se si sta effettuando qualche operazione di touch, blocco la rotazione
 			canvas.rotate(bearing, screen_center.x, screen_center.y);
-
+			this.canvas = canvas.getMatrix();
 
 			prepareImage(canvas);
 			drawMarkers(canvas);
