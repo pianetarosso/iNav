@@ -55,6 +55,7 @@ public class Room {
 		
 		setRoom(nome_stanza, persone, altro, link);
 		this.punto = punto;
+		punto.stanza = this;
 	}
 
 	// METODI COMUNI DEI COSTRUTTORI

@@ -1,6 +1,12 @@
 package it.inav;
 
+import it.inav.R;
+import it.inav.R.id;
+import it.inav.R.layout;
+import it.inav.R.string;
+import it.inav.alertDialogs.Find;
 import it.inav.base_objects.Building;
+import it.inav.graphics.MapMovement;
 import it.inav.graphics.MapView;
 import it.inav.sensors.Compass;
 import android.app.Activity;
@@ -11,23 +17,57 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 
+
+/** Activity del Navigatore.
+ * <br />
+ * Qui vengono mostrate la mappa di un piano, effettuate le ricerche, effettuata la navigazione
+ * 
+ * @author Marco Fedele
+ * @category Activity
+ * 
+ * @see MapView
+ * @see MapMovement
+ */
 public class Navigator extends Activity {
 
-	// variabile per inizializzare il debug
+	
+	/** Variabile di debug
+	 * <br />
+	 * TRUE siamo in modalità simulazione, viene utilizzata la bussola simulata
+	 * <br />
+	 * FALSE viene utilizzata la bussola del terminale
+	 * 
+	 * @see Compass
+	 */
 	private boolean debug = true;
+	
+	/** Array di ID di edifici provenienti dall'Activity precedente */
 	private String[] b;
+	
+	/** View di questa Activity
+	 * @see MapView
+	 */
 	private MapView cv;
+	
+	/** Classe che gestisce le ricerche sulla mappa
+	 * @see Find
+	 */
 	private Find find;
 
 
 
+	/** 
+	 * @see android.app.Activity#onCreate(android.os.Bundle)
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 
+		// imposto il layout
 		setContentView(R.layout.navigator_layout);
 
+		// recupero l'id dell'edificio
 		b = this.getIntent().getStringArrayExtra("building");
 
 
@@ -55,44 +95,64 @@ public class Navigator extends Activity {
 		// (con valori particolari per ascensori e scale)
 
 
-
+		// trovo la MapView nel Layout
 		cv = (MapView) this.findViewById(R.id.map); 
-		//setContentView(cv);
-		MapMovement mm = new MapMovement(cv);
-		cv.setOnTouchListener(mm);
+		
+		// imposto il TouchListener della MapView
+		cv.setOnTouchListener(new MapMovement(cv));
+		
 
+		// aggiungo il supporto alla bussola
 		new Compass(this, cv, debug);
 	}
 
+	
 	@Override
 	protected void onStart() {
 
+		// carico l'edificio
 		loadBuilding();
 
 
 		super.onStart();
 	}
 
-
+	/** Caricamento dell'edificio 
+	 * @see Building
+	 */
 	private void loadBuilding() {
 
-		// aggiungere un'asynctask???????
+		// recupero l'id 
 		long id = Long.parseLong(b[0]);
+		
+		// carico il Building
 		Building building = Building.getBuilding(this, id);
 
+		// nel caso l'edificio sia nullo, lancio un errore
 		if (building == null) 
 			showError();
+		
 		else {
+			// imposto i piani nella MapView
 			cv.init(building.getPiani());
+			
+			// imposto il piano numero 0
 			cv.setFloor(building.getPiani().get(0).numero_di_piano);
+			
+			// abilito il find
 			find = new Find(building, this);
 		}
 
 	}
 
-	// nel caso di problemi nel caricamento di un edificio comunico all'utente
+	// 
 	// che c'è stato un errore, aggiungo un valore ai buildings danneggiati
 	// nelle SP e ritorno al main "pulendo" le activities precendeti
+	
+	/**
+	 * Nel caso di problemi nel caricamento di un edificio comunico all'utente che c'è stato
+	 * un errore con un AlertDialog, e ritorno al MAIN eliminando la history delle Activities
+	 */
 	private void showError() {
 
 		final Context context = this;
@@ -105,9 +165,12 @@ public class Navigator extends Activity {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
+				
 				dialog.dismiss();
+				
 				Intent i = new Intent(context, MainActivity.class);
 				i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);  
+				
 				context.startActivity(i);
 			}
 		});
@@ -128,14 +191,19 @@ public class Navigator extends Activity {
 	}
 
 
-	// intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
+	// 
+	
+	/** Intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
+	 * di staze e persone
+	 * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
+	 */
 	@Override
 	public boolean onKeyDown(int keyCode, android.view.KeyEvent event)  {
 
-
 		if (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) 
+			
+			// carico e mostro le domande
 			find.showQuestion(cv);
-
 
 		return super.onKeyDown(keyCode, event);
 	}    
