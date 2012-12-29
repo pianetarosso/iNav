@@ -1,5 +1,7 @@
 package it.inav;
 
+import java.util.concurrent.ExecutionException;
+
 import it.inav.R;
 import it.inav.R.id;
 import it.inav.R.layout;
@@ -12,9 +14,11 @@ import it.inav.sensors.Compass;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 
@@ -40,9 +44,7 @@ public class Navigator extends Activity {
 	 * @see Compass
 	 */
 	private boolean debug = true;
-	
-	/** Array di ID di edifici provenienti dall'Activity precedente */
-	private String[] b;
+
 	
 	/** View di questa Activity
 	 * @see MapView
@@ -53,7 +55,12 @@ public class Navigator extends Activity {
 	 * @see Find
 	 */
 	private Find find;
-
+	
+	/** edificio mostrato */
+	private Building building = null;
+	
+	/** imposto alcune variabili al primo avvio */
+	private boolean firstStart = true;
 
 
 	/** 
@@ -68,7 +75,7 @@ public class Navigator extends Activity {
 		setContentView(R.layout.navigator_layout);
 
 		// recupero l'id dell'edificio
-		b = this.getIntent().getStringArrayExtra("building");
+		String[] b = this.getIntent().getStringArrayExtra("building");
 
 
 		// verifica che id sia positivo
@@ -104,45 +111,53 @@ public class Navigator extends Activity {
 
 		// aggiungo il supporto alla bussola
 		new Compass(this, cv, debug);
+		
+		// carico l'edificio
+		loadBuilding(b);
 	}
 
 	
 	@Override
 	protected void onStart() {
 
-		// carico l'edificio
-		loadBuilding();
-
-
+		
+		
 		super.onStart();
 	}
 
-	/** Caricamento dell'edificio 
+	/** Caricamento dell'edificio, si occupa anche di mostrare il progressDialog
 	 * @see Building
 	 */
-	private void loadBuilding() {
+	private void loadBuilding(String[] b) {
 
-		// recupero l'id 
-		long id = Long.parseLong(b[0]);
 		
-		// carico il Building
-		Building building = Building.getBuilding(this, id);
-
+		ProgressDialog pd = new ProgressDialog(this);
+		pd.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+		pd.setMax(6);
+		
+		pd.setTitle(R.string.loading);
+		
+		pd.show();
+		
+		LoadBuilding lb = new LoadBuilding();
+		lb.initialize(this,  pd);
+		
+		lb.execute(b);
+		
+		try {
+			lb.get();
+		} catch (Exception e) {
+			e.printStackTrace();
+			pd.dismiss();
+		} 
+		
+		
 		// nel caso l'edificio sia nullo, lancio un errore
 		if (building == null) 
 			showError();
-		
-		else {
-			// imposto i piani nella MapView
-			cv.init(building.getPiani());
-			
-			// imposto il piano numero 0
-			cv.setFloor(building.getPiani().get(0).numero_di_piano);
-			
+		else
 			// abilito il find
 			find = new Find(building, this);
-		}
-
 	}
 
 	// 
@@ -186,13 +201,40 @@ public class Navigator extends Activity {
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
+		
+		
+		
+						
+				
+				
 		super.onResume();
 	}
 
-
-	// 
 	
+
+	/**
+	 * Override per impostare alcuni valori della view senza incappare in errori nella 
+	 * lettura delle dimensioni della View stessa
+	 */
+	@Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		
+		if (hasFocus && firstStart && (building != null)) {
+			
+			// imposto i piani e altri parametri nella MapView
+			cv.init(building.getPiani());
+			
+			if (debug)
+				// imposto la posizione fittizia
+				cv.setUserPosition(building.getStanze().get(0).punto);
+			
+			firstStart = false;
+		}
+		
+		super.onWindowFocusChanged(hasFocus);
+	}
+
+
 	/** Intercetto il tasto "cerca" di android, di modo che si apra una finestra di selezione e ricerca
 	 * di staze e persone
 	 * @see android.app.Activity#onKeyDown(int, android.view.KeyEvent)
@@ -206,6 +248,48 @@ public class Navigator extends Activity {
 			find.showQuestion(cv);
 
 		return super.onKeyDown(keyCode, event);
-	}    
+	}  
+	
+	
+
+	
+	/** AsyncTask per il caricamento di un edificio. 
+	 * Legata ad un ProgressDialog effettua il loading di tutte le caratteristiche di un edificio 
+	 * (immagini comprese).
+	 * Prende in input l'id dell'edificio da caricare
+	 */
+	private class LoadBuilding extends AsyncTask<String, Void, Void> {
+
+		private Context context;
+		private ProgressDialog progress;
+		
+		/** Metodo per impostare alcuni valori necessari per la funzione getBuilding
+		 * 
+		 * @param context Context
+		 * @param pd ProgressDialog indicatore del progresso per l'utente
+		 */
+		public void initialize(Context context, ProgressDialog pd) {
+			this.context = context;
+			this.progress = pd;
+		}
+
+		@Override
+		protected Void doInBackground(String... b) {
+			
+			// recupero l'id
+			long id = Long.parseLong(b[0]);
+			
+			building = Building.getBuilding(context, id, progress);
+			
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			progress.dismiss();
+			super.onPostExecute(result);
+		}
+		
+	}
 
 }

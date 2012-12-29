@@ -20,6 +20,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.SQLException;
 import android.graphics.Bitmap;
@@ -131,23 +132,34 @@ public class Building {
 		}
 	}
 
-	// Metodo per recuperare il building dal database
-	public static Building getBuilding(Context context, long id) {
+	/** Metodo per caricare il building dal database
+	 * 
+	 * @param context Context "ambiente" necessario per accedere al database
+	 * @param id long identificatore dell'edificio da caricare 
+	 * @param progress ProgressDialog progresso del caricamento dell'edificio in 
+	 * 6 parti: edificio, punti, piani, percorsi, stanze e immagini
+	 * @return NULL se l'edificio NON è stato trovato, inoltre chiama {@link SP#addDamagedBuilding(Context, long)}
+	 * @return Building se l'edificio è presente nel database
+	 */
+	public static Building getBuilding(Context context, long id, ProgressDialog progress) {
 		
 		try {
 			
 			Building b = null;
 			
+			// apro il database
 			InitializeDB idb = new InitializeDB(context);
 	        idb.open();
 	        
 	        
 	        if (idb.existBuilding(id));
-	        	 b = idb.fetchBuilding(id);
+	        	 b = idb.fetchBuilding(id, progress);
 	        	
 	        idb.close();
 			
+	        // carico le immagini
 	        loadImages(b);
+	        progress.setProgress(6);
 
 	        return b;
 	        
@@ -160,7 +172,11 @@ public class Building {
 	}
 	
 	
-	// metodo per caricare le immagini
+	/** Caricamento delle immagini dell'edificio dalla memoria (SD)
+	 * 
+	 * @param b Building edificio di cui recuperare le immagini
+	 * @throws FileNotFoundException
+	 */
 	private static void loadImages(Building b) 
 			throws FileNotFoundException {
 		

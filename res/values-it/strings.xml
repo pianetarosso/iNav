@@ -12,4 +12,5 @@
     <string name="find_message">Seleziona cosa stai cercando:</string>
     <string name="rooms">Stanze</string>
     <string name="people">persone</string>
+    <string name="unknown_position">Posizione sconosciuta!</string>
 </resources>

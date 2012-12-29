@@ -30,21 +30,9 @@ import android.widget.ImageView;
  * @category View
  *
  */
-/**
- * @author marco
- *
- */
-/**
- * @author marco
- *
- */
-/**
- * @author marco
- *
- */
 public class MapView extends ImageView  {
 
-	
+
 	/** Orientamento della mappa */
 	private float bearing;
 
@@ -52,44 +40,44 @@ public class MapView extends ImageView  {
 	/** Piano attualmente mostrato dalla View 
 	 * @see Floor*/
 	private Floor selected_floor = null;
-	
-	
+
+
 	/** Lista di piani derivanti dal Building
 	 * @see Building
 	 */
 	private List<Floor> floors = null;
 
-	
+
 	/** Immagine attualmente mostrata dala View */
 	private Bitmap bmp;
 
-	
+
 	/** Zoom attuale dell'immagine */
 	public float zoom;
-	
+
 	/** Zoom minimo dell'immagine 
 	 * @see MapView#setInitialZoom()
 	 */
 	private float min_zoom;
 
-	
+
 	/** Centro dello schermo */
 	private PointF screen_center = null;
-	
+
 	/** Centro dell'immagine.
 	 * <br />
 	 * Varia a seconda dello spostamento della mappa eseguito dall'utente o dal sistema.
 	 * Le sue coordinate sono indipendenti dallo zoom*/
 	private PointF image_center = null;
 
-	
+
 	/** Matrice di trasformazione dell'immagine: TRASLAZIONE e ZOOM*/
 	private Matrix image = new Matrix();
-	
+
 	/** Matrice di trasformazione della canvas: ROTAZIONE */
 	private Matrix inverseRotation = new Matrix();
 
-	
+
 	/** Test per bloccare il movimento
 	 * @see MapMovement#onTouch(android.view.View, android.view.MotionEvent) 
 	 */
@@ -99,38 +87,48 @@ public class MapView extends ImageView  {
 	/** Diametro del Marker disegnato 
 	 * @see MapView#drawMarkers(Canvas)*/
 	private static final int MARKER_DIAMETER = 3;
-	
+
 	/** Massimo zoom 
 	 * @see MapView#setZoom(float)
 	 * @see MapView#setZoom(float, PointF)*/
 	private static final int MAX_ZOOM = 1;
-	
+
 	/** Valore minimo di rotazione considerata
 	 * @see MapView#setBearing(float)
 	 */
 	private static final float MIN_ROTATION = (float) 0.1;
-	
-	
+
+
 	/** Imposta alcuni valori di dimensione e crea le path al primo onDraw */
 	private boolean initial_set = true;
-	
+
 	/** Path della freccia, una esterna che fa da bordo e una interna*/
 	private Path extPath, intPath;
-	
+
 	/** Colore del bordo della {@link MapView#extPath} */
 	private static final int EXT_COLOR = Color.WHITE;
-	
+
 	/** Colore del bordo della {@link MapView#intPath} */
 	private static final int INT_COLOR = Color.BLUE;
-	
+
 	/** Colore interno dei marker */
 	private static final int MARKER_COLOR = Color.RED;
-	
+
 	/** Colore del bordo dei marker, normale */
 	private static final int MARKER_BORDER = Color.WHITE;
-	
+
 	/** Colore del bordo del marker, selezionato */
 	private static final int MARKER_SELECTED = Color.YELLOW;
+
+	/** Posizione attuale utente */
+	private Point user_position = null;
+
+	/** Si sta navigando? */
+	private boolean isNavigating = false;
+
+	/** Percorso da seguire sul piano */
+	private PointF[] percorso = new PointF[0];
+
 
 
 	// COSTRUTTORI /////////////////////////////////////////////////////
@@ -151,11 +149,26 @@ public class MapView extends ImageView  {
 	////////////////////////////////////////////////////////////////////
 	// FUNZIONI CHIAMATE ALL'INIZIO
 
-	
-	/** Metodo per impostare i piani 
-	 * @param floors List<Floor> lista di piani dell'edificio*/
+
+	/** Metodo per impostare i piani e inizializzare alcuni parametri tra cui anche il primo piano visualizzato
+	 * @param floors List<Floor> lista di piani dell'edificio
+	*/
 	public void init(List<Floor> floors) {
+		
 		this.floors = floors;
+		
+		// inizialmente imposto come numero di piano quello più basso.
+		this.setFloor(floors.get(0).numero_di_piano);
+		
+		// imposto il centro dello schermo
+		setScreenCenter();
+
+		// imposto lo zoom iniziale e il centro dell'immagine
+		setInitialZoom();
+
+		// preparo le due Path della freccia
+		createArrows();
+					
 		setFocusable(true);
 	}
 
@@ -232,11 +245,11 @@ public class MapView extends ImageView  {
 		image.postTranslate(
 				screen_center.x -  centerScaledWidth, 
 				screen_center.y - centerScaledHeigth);
-		
+
 		this.invalidate();
 	}
 
-	
+
 	/** Calcolo e imposto il centro dello schermo.
 	 * <br />
 	 * Al termine chiama {@link MapView#setInitialZoom()}
@@ -265,7 +278,7 @@ public class MapView extends ImageView  {
 	private void createArrows() {
 
 		float movement = 5f;
-		
+
 		// recupero il centro dello schermo
 		float x = screen_center.x;
 		float y = screen_center.y;
@@ -292,8 +305,8 @@ public class MapView extends ImageView  {
 		intPath.lineTo(x, y + movement);
 		intPath.close();
 	}
-	
-	
+
+
 	////////////////////////////////////////////////////////////////////
 
 
@@ -313,16 +326,16 @@ public class MapView extends ImageView  {
 				this.selected_floor = f;
 				break;
 			}
-		
+
 		// se le immagini sono diverse provvedo ad impostarle
 		if (bmp != selected_floor.immagine) {
 			bmp = selected_floor.immagine;
 		}
-		
+
 		this.invalidate();
 	}
 
-	
+
 	/** Imposto lo zoom, costringendolo tra il massimo e minimo.
 	 * 
 	 * @param zoom float nuovo valore dello zoom
@@ -341,12 +354,12 @@ public class MapView extends ImageView  {
 
 		else 
 			this.zoom = zoom;
-		
+
 		// forzo il redraw dello schermo
 		this.invalidate();
 	}
 
-	
+
 	/** Imposto il punto su cui muovere la mappa. Imposto anche un valore di zoom pari a 0.8
 	 * <br />
 	 * Manca ancora l'animazione del movimento
@@ -356,7 +369,7 @@ public class MapView extends ImageView  {
 	public void goToPoint(Point point) {
 
 		// aumento lo zoom e sposto il centro dell'immagine
-		setZoom((float) 0.8, point.posizione);
+		setZoom((float) 0.2, point.posizione);
 	}
 
 	/** Metodo per muovere la mappa sullo schermo.
@@ -378,8 +391,11 @@ public class MapView extends ImageView  {
 		// INVERSIONE DELLA ROTAZIONE //////////////////////////////////////////
 		float[] movement = {start.x, start.y, stop.x, stop.y};
 
-		// uso la matrice di rotazione inversa per rimappare i punti
-		inverseRotation.mapPoints(movement);
+		if (isNavigating) {
+
+			// uso la matrice di rotazione inversa per rimappare i punti
+			inverseRotation.mapPoints(movement);
+		}
 
 		// calcolo lo spostamento sull'asse X e Y
 		float dx = movement[2] - movement[0];
@@ -389,7 +405,7 @@ public class MapView extends ImageView  {
 
 		// CALCOLO DELLA TRASLAZIONE E ZOOM
 
-		
+
 		float[] new_center = {screen_center.x, screen_center.y};
 
 		// Copio la matrice dell'immagine e applico la traslazione calcolata sopra
@@ -419,7 +435,7 @@ public class MapView extends ImageView  {
 
 			// copio la matrice "copia" su quella originale dell'immagine
 			image.set(copy);
-			
+
 			// forzo l'aggiornamento della View
 			this.invalidate();
 
@@ -428,7 +444,7 @@ public class MapView extends ImageView  {
 		else
 			return false;
 	}
-	
+
 	/** Imposto lo zoom e il nuovo centro
 	 * 
 	 * @param zoom float nuovo zoom
@@ -443,8 +459,8 @@ public class MapView extends ImageView  {
 		setImageCenter(point);
 	}
 
-	
-	
+
+
 	/** Impostazione dell'orientamento.
 	 * <br />
 	 * Questo metodo viene utilizzato solo se non è in corso un vento touch.
@@ -463,27 +479,71 @@ public class MapView extends ImageView  {
 		try {
 			// se non c'è movimento
 			if (!isMoving)	{
-				
+
 				// calcolo il nuovo bearing
 				float new_bearing = (float) (-bearing + selected_floor.bearing);
 
 				// verifico se la rotazione è maggiore del valore minimo impostato
 				if (Math.abs(this.bearing - new_bearing) > MIN_ROTATION ) {
-					
+
 					// salvo la rotazione
 					this.bearing = new_bearing;
-					
+
 					// imposto la matrice inversa di rotazione
 					inverseRotation.setRotate(-new_bearing, screen_center.x, screen_center.y);
 				}
 			}
-			
+
 		} catch (NullPointerException e) {
 			this.bearing = 0;
-			}
+		}
 	}
 
-	
+
+	/** Imposto la posizione dell'utente (predefinito null).
+	 * Nel caso si stia effettuando una navigazione, provvedo a ridimensionare l'array {@link #percorso}
+	 * eliminando tutti i punti precedenti a questo nell'array.
+	 * 
+	 * @param position Point posizione dell'utente sulla mappa
+	 */
+	public void setUserPosition(Point position) {
+
+		this.user_position = position;
+		
+		goToPoint(user_position);
+
+		if (isNavigating) {
+
+			// elimino tutti gli elementi precedenti al punto "position" sul percorso
+			// nel caso si stia navigando
+
+			int new_zero = Integer.MAX_VALUE;
+			PointF[] new_percorso = null;
+
+			for (int i=0; i < percorso.length; i++)
+				if (percorso[i] == position.posizione) {
+					new_zero = i;
+					new_percorso = new PointF[percorso.length - i];
+				}
+				else if (i >= new_zero)
+					new_percorso[i - new_zero] = percorso[i];
+
+			percorso = new_percorso;
+		}
+	}
+
+	/** Imposto una navigazione sul piano in cui si trova l'utente. 
+	 * Abilito inoltre la variabile {@link #isNavigating}
+	 * Nel caso sia necessario imposto anche il piano.
+	 * 
+	 * @param percorso PointF[] array di punti, il primo è {@link #user_position}
+	 * @param floor int piano in cui si trova l'utente e il percorso
+	 */
+	public void setNavigation(PointF[] percorso, int floor) {
+		this.percorso = percorso;
+		this.isNavigating = true;
+		setFloor(floor);
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -514,34 +574,34 @@ public class MapView extends ImageView  {
 	 * @see Floor
 	 */
 	private void drawMarkers(Canvas canvas, Paint paint) {
-		
+
 		for (Point p : selected_floor.punti) {
-			
+
 			Room stanza = p.stanza;
 
 			if (stanza != null) {
-				
+
 				float[] point = {p.posizione.x, p.posizione.y};
-				
+
 				image.mapPoints(point);
-				
+
 				// disegno il bordo bianco
 				paint.setColor(MARKER_BORDER);
 				canvas.drawCircle(point[0], point[1], MARKER_DIAMETER + 1, paint);
-	
+
 				// disegno il marker
 				paint.setColor(MARKER_COLOR);
 				canvas.drawCircle(point[0], point[1], MARKER_DIAMETER, paint);
 			}
 		}
-		
+
 		// salvo il canvas
 		canvas.save();
 		canvas.restore();
 	}
 
-	
-	
+
+
 	/** Disegno le frecce del navigatore sul canvas
 	 * 
 	 * @param canvas Canvas dato da {@link MapView#onDraw(Canvas)}
@@ -549,39 +609,68 @@ public class MapView extends ImageView  {
 	 */
 	private void drawArrows(Canvas canvas, Paint paint) {
 
-		Path copyExtPath = new Path();
-		Path copyIntPath = new Path();
-		
-		copyExtPath.set(extPath);
-		copyIntPath.set(intPath);
+		try {
+			if (user_position.piano == selected_floor.numero_di_piano) {
+				Path copyExtPath = new Path();
+				Path copyIntPath = new Path();
 
-		// applico la rotazione inversa alle path
-		copyExtPath.transform(inverseRotation);
-		copyIntPath.transform(inverseRotation);
+				copyExtPath.set(extPath);
+				copyIntPath.set(intPath);
 
-		// le disegno dei ripettivi colori
-		paint.setColor(EXT_COLOR);
-		canvas.drawPath(copyExtPath, paint);
+				// nel caso non si stia effettuando una navigazione, provvedo a traslare e ruotare
+				// le frecce nella posizione opportuna in cui si trova l'utente
+				if (!isNavigating) {
+					
+					// applico la rotazione 
+					Matrix nav = new Matrix();
+					nav.setRotate(bearing, screen_center.x, screen_center.y);
 
-		paint.setColor(INT_COLOR);
-		canvas.drawPath(copyIntPath, paint);
+					copyExtPath.transform(nav);
+					copyIntPath.transform(nav);
+					
+					
+					// applico la traslazione, ricordarsi che le frecce sono GIÀ posizionate
+					// in image_center, ed è necessario dargli solo un offset
+					float dx = -(image_center.x - user_position.posizione.x) * zoom;
+					float dy = -(image_center.y - user_position.posizione.y) * zoom;
+					
+					copyExtPath.offset(dx, dy);
+					copyIntPath.offset(dx, dy);
 
-		// salvo il canvas
-		canvas.save();
-		canvas.restore();
+				}
+				else {
+					// altrimenti applico la rotazione inversa alle path
+					copyExtPath.transform(inverseRotation);
+					copyIntPath.transform(inverseRotation);
+				}
+
+				// le disegno dei ripettivi colori
+				paint.setColor(EXT_COLOR);
+				canvas.drawPath(copyExtPath, paint);
+
+				paint.setColor(INT_COLOR);
+				canvas.drawPath(copyIntPath, paint);
+
+				// salvo il canvas
+				canvas.save();
+				canvas.restore();
+			}
+		} catch (NullPointerException e) {
+			// non è ancora stata impostata una posizione per l'utente, quindi non faccio nulla
+		}
 	}
 
-	
+
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
 
-	
 
 
-	
+
+
 	/** Override of draw.
 	 * <br />
 	 * Imposto alcuni valori e costruisco alcuni oggetti.
@@ -594,28 +683,29 @@ public class MapView extends ImageView  {
 
 		// imposto i valori iniziali
 		if (initial_set) {
-			
+/*
 			// imposto il centro dello schermo
 			setScreenCenter();
-			
+
 			// imposto lo zoom iniziale e il centro dell'immagine
 			setInitialZoom();
-			
+
 			// preparo le due Path della freccia
 			createArrows();
-			
-			initial_set = false;
+
+			initial_set = false;*/
 		}
 
 		if (selected_floor != null) {
-			
+
 			// preparo la Paint
 			Paint paint = new Paint();
 			paint.setAntiAlias(true);
 			paint.setFilterBitmap(true);
-		
-			// ruoto il canvas del valore dato
-			canvas.rotate(bearing, screen_center.x, screen_center.y);
+
+			// ruoto il canvas del valore dato (nel caso ci sia una navigazione)
+			if (isNavigating)
+				canvas.rotate(bearing, screen_center.x, screen_center.y);
 
 			// disegno gli oggetti
 			drawImage(canvas, paint);
@@ -638,7 +728,7 @@ public class MapView extends ImageView  {
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		int measuredWidth = measure(widthMeasureSpec);
 		int measuredHeight = measure(heightMeasureSpec);
-		
+
 		setMeasuredDimension(measuredWidth, measuredHeight);
 	}
 

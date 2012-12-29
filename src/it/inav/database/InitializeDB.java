@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -294,14 +295,27 @@ public class InitializeDB {
 		}
 	}
 	
-	// recupera un edificio specifico (tramite il suo id)
-	public Building fetchBuilding(long id) 
+	/** Recupera un edificio specifico dal database.
+	 * 
+	 * @param id long identificativo dell'edificio
+	 * @param progress ProgressDialog indicatore dello stato di caricamento dell'edificio
+	 * @return Building l'edificio cercato
+	 * @throws SQLException
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
+	 */
+	public Building fetchBuilding(long id, ProgressDialog progress) 
 			throws SQLException, MalformedURLException, URISyntaxException {
 		Building b = buildings.fetchBuilding(id);
+		progress.setProgress(1);
 		b.setPunti(points.fetchPoints(id));
+		progress.setProgress(2);
 		b.setPiani(floors.fetchFloors(id, b.getPunti()));
+		progress.setProgress(3);
 		b.setPaths(paths.fetchAllPaths(id, b.getPunti()));
+		progress.setProgress(4);
 		b.setStanze(rooms.fetchRooms(id, b.getPunti()));
+		progress.setProgress(5);
 		return b;
 	}
 
