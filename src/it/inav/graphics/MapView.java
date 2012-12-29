@@ -119,6 +119,9 @@ public class MapView extends ImageView  {
 
 	/** Colore del bordo del marker, selezionato */
 	private static final int MARKER_SELECTED = Color.YELLOW;
+	
+	/** Colore della path */
+	private static final int PATH_COLOR = Color.GREEN;
 
 	/** Posizione attuale utente */
 	private Point user_position = null;
@@ -388,6 +391,10 @@ public class MapView extends ImageView  {
 	 * */
 	public boolean setMovement(PointF start, PointF stop) {
 
+		// se sto navigando NON posso effettuare spostamenti
+		if (isNavigating)
+			return false;
+		
 		// INVERSIONE DELLA ROTAZIONE //////////////////////////////////////////
 		float[] movement = {start.x, start.y, stop.x, stop.y};
 
@@ -660,6 +667,32 @@ public class MapView extends ImageView  {
 		}
 	}
 
+	/** Metodo per disegnare i percorsi sulla mappa
+	 * 
+	 * @param canvas Canvas dato da {@link MapView#onDraw(Canvas)}
+	 * @param paint Paint metodo di disegno
+	 */
+	private void drawPath(Canvas canvas, Paint paint) {
+		
+		if (percorso.length > 1) {
+			
+			for (int i=1; i < percorso.length; i++) {
+			
+				float[] pts = {percorso[i-1].x, percorso[i-1].y, percorso[i].x, percorso[i].y};
+				
+				image.mapPoints(pts);
+				
+				paint.setStrokeWidth(4);
+				paint.setColor(Color.WHITE);
+				canvas.drawLines(pts, paint);
+				
+				paint.setStrokeWidth(3);
+				paint.setColor(PATH_COLOR);
+				canvas.drawLines(pts, paint);
+				
+			}
+		}
+	}
 
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -681,21 +714,6 @@ public class MapView extends ImageView  {
 	@Override
 	public void draw(Canvas canvas) {
 
-		// imposto i valori iniziali
-		if (initial_set) {
-/*
-			// imposto il centro dello schermo
-			setScreenCenter();
-
-			// imposto lo zoom iniziale e il centro dell'immagine
-			setInitialZoom();
-
-			// preparo le due Path della freccia
-			createArrows();
-
-			initial_set = false;*/
-		}
-
 		if (selected_floor != null) {
 
 			// preparo la Paint
@@ -708,10 +726,10 @@ public class MapView extends ImageView  {
 				canvas.rotate(bearing, screen_center.x, screen_center.y);
 
 			// disegno gli oggetti
-			drawImage(canvas, paint);
+			drawImage(canvas, paint);			
+			drawPath(canvas, paint);
 			drawMarkers(canvas, paint);
 			drawArrows(canvas, paint);
-
 		}
 
 	}

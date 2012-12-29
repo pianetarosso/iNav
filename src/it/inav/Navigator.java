@@ -18,6 +18,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
@@ -224,10 +225,12 @@ public class Navigator extends Activity {
 			// imposto i piani e altri parametri nella MapView
 			cv.init(building.getPiani());
 			
-			if (debug)
+			if (debug) {
 				// imposto la posizione fittizia
 				cv.setUserPosition(building.getStanze().get(0).punto);
-			
+				PointF[] out = {building.getStanze().get(0).punto.posizione, new PointF(34,45)};
+				cv.setNavigation(out, building.getPiani().get(0).numero_di_piano);
+			}
 			firstStart = false;
 		}
 		
