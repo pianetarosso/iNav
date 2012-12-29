@@ -18,6 +18,12 @@ import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+/* MANCANTE ANCORA: 
+ * 		EVIDENZIAZIONE DEI MARKER !!!!!!!!
+ * 		TERMINE DEL "VIAGGIO"
+ * 
+ */
+
 
 /**
  * Java class, extends ImageView
@@ -122,12 +128,15 @@ public class MapView extends ImageView  {
 	
 	/** Colore della path */
 	private static final int PATH_COLOR = Color.GREEN;
+	
+	/** Dimensione della path */
+	private static final int PATH_WIDTH = 2;
 
 	/** Posizione attuale utente */
 	private Point user_position = null;
 
 	/** Si sta navigando? */
-	private boolean isNavigating = false;
+	public boolean isNavigating = false;
 
 	/** Percorso da seguire sul piano */
 	private PointF[] percorso = new PointF[0];
@@ -463,7 +472,11 @@ public class MapView extends ImageView  {
 	public void setZoom(float zoom, PointF point) {
 
 		setZoom(zoom);
-		setImageCenter(point);
+		
+		// nel caso in cui sia in corso una navigazione, mantengo lo zoom
+		// fisso sullo stesso punto
+		if (!isNavigating)
+			setImageCenter(point);
 	}
 
 
@@ -543,13 +556,25 @@ public class MapView extends ImageView  {
 	 * Abilito inoltre la variabile {@link #isNavigating}
 	 * Nel caso sia necessario imposto anche il piano.
 	 * 
-	 * @param percorso PointF[] array di punti, il primo è {@link #user_position}
+	 * @param list PointF[] array di punti, il primo è {@link #user_position}
 	 * @param floor int piano in cui si trova l'utente e il percorso
 	 */
-	public void setNavigation(PointF[] percorso, int floor) {
-		this.percorso = percorso;
+	public void setNavigation(Point[] list, int floor) {
+		this.percorso = new PointF[list.length];
+		
+		for(int i=0; i < list.length; i++)
+			this.percorso[i] = list[i].posizione;
+		
 		this.isNavigating = true;
+		
 		setFloor(floor);
+	}
+	
+	/** Interrompo la navigazione */
+	public void stopNavigation() {
+		
+		isNavigating = false;
+		percorso = new PointF[0];
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
@@ -682,11 +707,11 @@ public class MapView extends ImageView  {
 				
 				image.mapPoints(pts);
 				
-				paint.setStrokeWidth(4);
+				paint.setStrokeWidth(PATH_WIDTH + 2);
 				paint.setColor(Color.WHITE);
 				canvas.drawLines(pts, paint);
 				
-				paint.setStrokeWidth(3);
+				paint.setStrokeWidth(PATH_WIDTH);
 				paint.setColor(PATH_COLOR);
 				canvas.drawLines(pts, paint);
 				

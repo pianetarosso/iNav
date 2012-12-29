@@ -13,4 +13,5 @@
     <string name="rooms">Stanze</string>
     <string name="people">persone</string>
     <string name="unknown_position">Posizione sconosciuta!</string>
+    <string name="stop_travel_question">Vuoi interrompere la navigazione?</string>
 </resources>

@@ -4,6 +4,7 @@ import it.inav.R;
 import it.inav.base_objects.Building;
 import it.inav.base_objects.Room;
 import it.inav.graphics.MapView;
+import it.inav.mapManagment.MapManagment;
 
 import java.util.List;
 import java.util.SortedMap;
@@ -41,8 +42,8 @@ public class Find {
 	/** Contiene i nomi dei due gruppi su cui operare scelta, ROOM or PEOPLE */
 	CharSequence[] items = null;
 	
-	/** Vedi {@link it.inav.graphics.MapView} */
-	private MapView cv;
+	/** Gestore della mappa {@link MapManagment} */
+	private MapManagment mm;
 
 	
 	
@@ -51,10 +52,12 @@ public class Find {
 	 * 
 	 * @param b Building l'edificio in considerazione
 	 * @param context Context il contesto
+	 * @param mm MapManagment gestore della mappa
 	 */
-	public Find(Building b, Context context) {
+	public Find(Building b, Context context, MapManagment mm) {
 
 		this.context = context;
+		this.mm = mm;
 
 		// creo gli oggetti
 		people = new TreeMap<String, Room>();
@@ -120,10 +123,8 @@ public class Find {
 	 * 
 	 * @param cv MapView la View che conterrà questo AlertDialog
 	 */
-	public void showQuestion(MapView cv) {
+	public void showQuestion() {
 
-		this.cv = cv;
-		
 		AlertDialog.Builder b = new AlertDialog.Builder(context);
 
 		b.setCancelable(true);
@@ -179,9 +180,8 @@ public class Find {
 				// recupero l'elemento dalla lista
 				Room selected = objects.get(list[which]);
 				
-				// mi sposto sul piano e punto della stanza.
-				cv.setFloor(selected.punto.piano);
-				cv.goToPoint(selected.punto);
+				mm.moveToPoint(selected.punto);
+				
 			}
 		});
 		b.show();

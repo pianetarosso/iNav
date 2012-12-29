@@ -1,15 +1,10 @@
 package it.inav;
 
-import java.util.concurrent.ExecutionException;
-
-import it.inav.R;
-import it.inav.R.id;
-import it.inav.R.layout;
-import it.inav.R.string;
 import it.inav.alertDialogs.Find;
 import it.inav.base_objects.Building;
 import it.inav.graphics.MapMovement;
 import it.inav.graphics.MapView;
+import it.inav.mapManagment.MapManagment;
 import it.inav.sensors.Compass;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -18,9 +13,9 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.widget.TextView;
 
 
 /** Activity del Navigatore.
@@ -62,6 +57,9 @@ public class Navigator extends Activity {
 	
 	/** imposto alcune variabili al primo avvio */
 	private boolean firstStart = true;
+	
+	/** gestore della mappa */
+	private MapManagment mm;
 
 
 	/** 
@@ -77,20 +75,11 @@ public class Navigator extends Activity {
 
 		// recupero l'id dell'edificio
 		String[] b = this.getIntent().getStringArrayExtra("building");
-
-
-		// verifica che id sia positivo
-		// verifica che sia possibile caricare le immagini
-
-		// aggiungere gesture per lo zoom
-		// aggiungere touch per navigare la mappa
+		
 
 		// aggiungere il resume dalla pausa
 
-		// drawing sulla mappa del percorso
-		// zoom automatico per mostrare il percorso fino al successivo "marker"
-		// freccia per indicare la direzione
-
+		
 		// campo informazioni (salire al secondo piano...)
 		// aggiungere pulsante "emergenza" ( ma per questo servirebbe anche introdurre una nuova modalità sul web)
 		// aggiungere campo "solo ascensore"
@@ -108,23 +97,21 @@ public class Navigator extends Activity {
 		
 		// imposto il TouchListener della MapView
 		cv.setOnTouchListener(new MapMovement(cv));
-		
 
 		// aggiungo il supporto alla bussola
 		new Compass(this, cv, debug);
 		
 		// carico l'edificio
 		loadBuilding(b);
+		
+		TextView tv = (TextView)this.findViewById(R.id.navigatorMessages);
+		
+		// imposto il gestore della mappa
+		mm = new MapManagment(cv, tv, building);
 	}
 
 	
-	@Override
-	protected void onStart() {
-
-		
-		
-		super.onStart();
-	}
+	
 
 	/** Caricamento dell'edificio, si occupa anche di mostrare il progressDialog
 	 * @see Building
@@ -158,7 +145,7 @@ public class Navigator extends Activity {
 			showError();
 		else
 			// abilito il find
-			find = new Find(building, this);
+			find = new Find(building, this, mm);
 	}
 
 	// 
@@ -193,22 +180,39 @@ public class Navigator extends Activity {
 		ad.show();
 	}
 
+	/** Mostra un AlertDialog per chiedere all'utente se vuole terminare la navigazione */
+	private void askStopTravel() {
+		
+		Builder ad = new AlertDialog.Builder(this);
 
-	@Override
-	protected void onPause() {
-		// TODO Auto-generated method stub
-		super.onPause();
-	}
+		ad.setMessage(R.string.stop_travel_question);
+		ad.setCancelable(false);
+		
+		ad.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
 
-	@Override
-	protected void onResume() {
-		
-		
-		
-						
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
 				
+				// elimino il dialog 
+				dialog.dismiss();
 				
-		super.onResume();
+				// interrompo la navigazione
+				cv.stopNavigation();
+					
+			}
+		});
+		
+		ad.setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		
+		// se è in corso una navigazione, mostro la navigazione
+		if (cv.isNavigating)
+			ad.show();
 	}
 
 	
@@ -226,10 +230,9 @@ public class Navigator extends Activity {
 			cv.init(building.getPiani());
 			
 			if (debug) {
+				
 				// imposto la posizione fittizia
 				cv.setUserPosition(building.getStanze().get(0).punto);
-				PointF[] out = {building.getStanze().get(0).punto.posizione, new PointF(34,45)};
-				cv.setNavigation(out, building.getPiani().get(0).numero_di_piano);
 			}
 			firstStart = false;
 		}
@@ -245,15 +248,30 @@ public class Navigator extends Activity {
 	@Override
 	public boolean onKeyDown(int keyCode, android.view.KeyEvent event)  {
 
-		if (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) 
+		if (keyCode == android.view.KeyEvent.KEYCODE_SEARCH) {
 			
+			// chiedo se l'utente vuole terminare il viaggio (se è il caso)
+			askStopTravel();
+		
 			// carico e mostro le domande
-			find.showQuestion(cv);
-
+			find.showQuestion();
+		}
+		
+		else if (keyCode == android.view.KeyEvent.KEYCODE_BACK) {
+			
+			askStopTravel();
+			
+			// ritornare al main
+			Intent i = new Intent(this, MainActivity.class);
+			i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			
+			this.startActivity(i);
+		}
+		
 		return super.onKeyDown(keyCode, event);
 	}  
 	
-	
+
 
 	
 	/** AsyncTask per il caricamento di un edificio. 
@@ -282,6 +300,7 @@ public class Navigator extends Activity {
 			// recupero l'id
 			long id = Long.parseLong(b[0]);
 			
+			// carico l'edificio
 			building = Building.getBuilding(context, id, progress);
 			
 			return null;
@@ -289,10 +308,47 @@ public class Navigator extends Activity {
 		
 		@Override
 		protected void onPostExecute(Void result) {
+			
+			// elimino il progressDialog
 			progress.dismiss();
+			
 			super.onPostExecute(result);
 		}
 		
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	@Override
+	protected void onStart() {
+	
+		super.onStart();
+	}
+	
+	@Override
+	protected void onPause() {
+		// TODO Auto-generated method stub
+		super.onPause();
+	}
+
+	@Override
+	protected void onResume() {
+	
+		super.onResume();
+	}
+	
+	
+	
 
 }

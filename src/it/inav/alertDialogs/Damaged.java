@@ -2,11 +2,10 @@ package it.inav.alertDialogs;
 
 import it.inav.R;
 import it.inav.Memory.SP;
-import it.inav.R.string;
 import it.inav.communications.Connect;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.View;
