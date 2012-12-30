@@ -724,11 +724,6 @@ public class MapView extends ImageView  {
 
 
 
-
-
-
-
-
 	/** Override of draw.
 	 * <br />
 	 * Imposto alcuni valori e costruisco alcuni oggetti.

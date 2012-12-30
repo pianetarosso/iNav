@@ -22,14 +22,30 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 
-
+/** Classe per la connessione e lo scaricamento dei dati dal server
+ * 
+ * @author Marco fedele
+ *
+ */
 public class Connect {
 
+	/** Link di base del server */
 	private static final String HOME = "http://10.0.2.2:8000/";
+	
+	/** Link per scaricare gli edifici dal server */
 	private static final String GET_BUILDING = "buildings/get/building=ID&LATITUDE&LONGITUDE&RADIUS";	 
 
 
-	// METODI ESPOSTI PER IL GET DEL/DEI BUILDING/S
+	/** Metodo per scaricare l'edificio dal server 
+	 * 
+	 * @param id long id dell'edificio da scaricare
+	 * @return new Building 
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws ParseException
+	 * @throws URISyntaxException
+	 */
 	private static Building getBuildingFromId(long id) 
 			throws ClientProtocolException, IOException, JSONException, ParseException, URISyntaxException {
 
@@ -38,6 +54,18 @@ public class Connect {
 		return new Building(json, HOME);
 	}
 
+	/** Metodo per scaricare una lista di edifici dal server, in base alla posizione e al raggio
+	 * 
+	 * @param latitude String latitudine del centro della ricerca
+	 * @param longitude String longitudine del centro della ricerca
+	 * @param radius int raggio (in Km) entro cui effettuare la ricerca degli edifici 
+	 * @return List(Building)
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 * @throws JSONException
+	 * @throws ParseException
+	 * @throws URISyntaxException
+	 */
 	public static List<Building> getBuildingsInRadius(String latitude, String longitude, int radius) 
 			throws ClientProtocolException, IOException, JSONException, ParseException, URISyntaxException {
 
@@ -46,8 +74,14 @@ public class Connect {
 		return Building.Buildings(json, HOME);
 	}
 
-	// funzione che costruisce l'url per recuperare un edificio, in base all'id, 
-	// o alla posizione e raggio
+	/** Metodo per costruire il link per scaricare un edificio o una lista di edifici
+	 * 
+	 * @param id long id dell'edificio
+	 * @param latitude String latitudine del centro della ricerca
+	 * @param longitude String longitudine del centro della ricerca
+	 * @param radius int raggio (in Km) entro cui effettuare la ricerca degli edifici 
+	 * @return String formattata correttamente per la ricerca
+	 */
 	private static String getBuildingURL(long id, String latitude, String longitude, int radius) {
 		String out = HOME;
 		out += GET_BUILDING.replace("ID", ""+id);
@@ -58,7 +92,11 @@ public class Connect {
 		return out;
 	}
 
-	// Salva le immagini del building
+	/** Metodo per scaricare le immagini dell'edificio dal server a partire dai link
+	 *  
+	 * @param building Building edificio scaricato
+	 * @throws IOException
+	 */
 	private static void getImages(Building building) throws IOException {
 
 		if (building.foto_link != null)
@@ -69,7 +107,12 @@ public class Connect {
 	}
 
 
-	// funzione per scaricare le immagini da un link
+	/** Metodo per scaricare un'immagine da un link
+	 * 
+	 * @param foto_link URI link dell'immagine sul server
+	 * @return Bitmap l'immagine scaricata
+	 * @throws IOException
+	 */
 	private static Bitmap downloadImage(URI foto_link) throws IOException {
 
 		// Open a connection to that URL. 
@@ -85,12 +128,19 @@ public class Connect {
 	}
 
 
-	// metodo statico, per lo scaricamento di un Building dal sito
+	/** Metodo statico per lo scaricamento e il salvataggio di un edificio dal server.
+	 * Utilizza un'AsyncTask per lo scaricamento: {@link downloadBuildings}
+	 * 
+	 * @param id long id dell'edificio da scaricare
+	 * @param context Context necessario per aprire la connessione con il database
+	 * @return
+	 */
 	public static Building downloadBuilding(long id, Context context) {
 
 		try {
 			Building b = Connect.getBuildingFromId(id);
 			Connect.getImages(b);
+			b.setWeigths();
 			SD.SaveBuilding(b, context);
 
 			return b;
@@ -102,7 +152,11 @@ public class Connect {
 		}
 	}
 
-	// ASYNCTASK PER SCARICARE (e salvare con tanto di immagini) UN B. DAL SITO
+	/** AsyncTask per scaricare un'edificio dal server. Gestisce anche un ProgressDialog
+	 * 
+	 * @author Marco Fedele
+	 *
+	 */
 	public static class downloadBuildings extends AsyncTask<Long, Void, Boolean[]> {
 
 		private Context context;
@@ -113,24 +167,35 @@ public class Connect {
 		public void setParameters(Context context, ProgressDialog pd) {
 			this.context = context;
 			this.pd = pd;
-			pd.show();
 		}
 
 
 		@Override
 		public Boolean[] doInBackground(Long... id) {
 
+			// array di booleani in output, si occupa di comunicare se c'è stato
+			// qualche errore nello scaricamento di uno degli edifici
 			output = new Boolean[id.length];
 
+			// inizializzo l'output
 			for (int i=0; i < output.length; i++)
 				output[i] = false;
 
 			for(int i=0; i < id.length; i++) {
+				
+				// scarico l'edificio e le immagini
 				Building b = downloadBuilding(id[i], context);
+				
+				// imposto il valore di output
 				output[i] = (b != null);
+				
+				// libero la memoria dalle immagini
 				b.freeMemory();
+				
+				// aumento il progress del ProgressDialog
 				pd.setProgress(i);
 			}
+			
 			return output;
 		}
 

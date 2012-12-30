@@ -2,6 +2,7 @@ package it.inav;
 
 import it.inav.Memory.SP;
 import it.inav.alertDialogs.Damaged;
+import it.inav.communications.Connect;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,12 +18,24 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
+
+/** Classe della main Activity
+ *  
+ * @author Marco Fedele
+ *
+ */
 public class MainActivity extends Activity {
 
+	/** pulsante per iniziare a navigare */
 	private Button start_navigate;
+
+	/** pulsante per cercare un edificio */
 	private Button search_building;
+
+	/** pulsante per riparare gli edifici danneggiati */
 	private Button danneggiati;
-	
+
+	/** lista delgi edifici scaricati dalle SP */
 	private SparseArray<String[]> buildings;
 
 	@Override
@@ -30,10 +43,13 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_layout);
 
+		// carico i pulsanti
 		loadButtons();
+
+		// verifico la connessione
 		testConnection();
-
-
+		
+		Connect.downloadBuilding(6, this);
 	}
 
 	@Override
@@ -50,7 +66,10 @@ public class MainActivity extends Activity {
 		super.onResume();
 	}
 
-	// verifico se il dispositivo è online
+	/** Metodo per verificare se il dispositivo è connesso alla rete
+	 * 
+	 * @return TRUE se è connesso, FALSE altrimenti
+	 */
 	private boolean isOnline() {
 
 		ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -60,12 +79,13 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
-	// carico i pulsanti 
+
+	/** Carico i listeners per i pulsanti (ed eventualmente ne mostro altri) */
 	private void loadButtons() {
-		
+
 		// carico i buildings presenti dalle SP
 		buildings = SP.loadBuildings(this);
-				
+
 		// inizia la navigazione su un edificio già presente in memoria
 		start_navigate = (Button)this.findViewById(R.id.inizia_navigazione);
 		start_navigate.setOnClickListener(new OnClickListener() {
@@ -74,22 +94,23 @@ public class MainActivity extends Activity {
 				startNavigation();
 			}
 		});
-		
+
 		// trova un edificio online
 		search_building = (Button)this.findViewById(R.id.trova_edifici);
-		
-		
-		
+
+
 		// visualizzo il pulsante degli edifici danneggiati solo se ce ne sono nelle SP
 		danneggiati = (Button)this.findViewById(R.id.edifici_danneggiati);
 		new Damaged(danneggiati, this);		
 	}
-	
-	
-	
-	
+
+
+	/** Metodo chiamato per iniziare la navigazione, mostra un AlertDialog con la lista di edifici
+	 * disponibili in locale
+	 */
 	private void startNavigation() {
 
+		// se non sono presenti edifici in memoria, mostro un toast e esco
 		if (buildings.size() == 0) {
 
 			Toast t = Toast.makeText(this, 
@@ -99,7 +120,7 @@ public class MainActivity extends Activity {
 		}
 
 		else {
-			// costruisco la lista
+			// costruisco la lista degli edifici dalle SP
 			CharSequence[] items = new CharSequence[buildings.size()];
 
 			for (int i=0; i < buildings.size(); i++) 
@@ -117,25 +138,29 @@ public class MainActivity extends Activity {
 					dialog.dismiss();
 
 					Intent i = new Intent(context, Navigator.class);
+
+					// passo all'intent della navigazione l'id dell'edificio
 					i.putExtra("building", buildings.get(item));
 					context.startActivity(i);
 				}
 			}).show();
 		}
-}
-
-
-// testo se il dispositivo è connesso, e agisco di conseguenza
-private void testConnection() {
-	if(!isOnline()) {
-		search_building.setEnabled(false);
-		if (danneggiati.isClickable())
-			danneggiati.setEnabled(false);
-
-		Toast t = Toast.makeText(this, 
-				this.getString(R.string.no_connection), 
-				Toast.LENGTH_LONG);
-		t.show();
 	}
-}
+
+
+	/** Testo se il dispositivo è connesso, e abilito/disabilito alcuni pulsanti di conseguenza.
+	 *  Se non è presente una connessione, ne informo l'utente con un Toast
+	*/
+	private void testConnection() {
+		if(!isOnline()) {
+			search_building.setEnabled(false);
+			if (danneggiati.isClickable())
+				danneggiati.setEnabled(false);
+
+			Toast t = Toast.makeText(this, 
+					this.getString(R.string.no_connection), 
+					Toast.LENGTH_LONG);
+			t.show();
+		}
+	}
 }

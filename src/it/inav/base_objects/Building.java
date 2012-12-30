@@ -414,6 +414,30 @@ public class Building {
 		}
 	}
 
+	
+	/** Metodo per impostare i pesi delle path, chiamato solo dopo
+	 * aver caricato le immagini dal server.
+	 */
+	public void setWeigths() {
+		
+		// imposto la dimensione delle immagini per ogni piano
+		for(Floor f : piani) {
+			
+			int w = f.immagine.getWidth();
+			int h = f.immagine.getHeight();
+			
+			// scansiono tutti i punti del piano
+			for (Point p : f.punti) 
+				
+				// scansiono tutte le path di ogni punto
+				for (Path path: p.paths) 
+					
+					// se il costo è -1 vuol dire che non è ancora stato impostato
+					if (path.costo < 0)
+						path.setWeight(w, h);
+				
+		}
+	}
 
 	/** Metodo per liberare la memoria dalle immagini, usato per eliminare problemi di carico della memoria*/
 	public void freeMemory() {

@@ -40,21 +40,24 @@ public class Path {
 
 	// COSTI //////////////////////////////////
 
-	/** costo per pixel della distanza orizzontale */
-	private static final int COSTO_PER_PIXEL = 1;
-
 	/** costo di default dell'ascensore (per 1 piano) */
-	private static final int COSTO_ASCENSORE = 4;
+	private static final int COSTO_ASCENSORE = 400;
 
 	/** costo di default delle scale (per 1 piano) */
-	private static final int COSTO_SCALA = 8;
+	private static final int COSTO_SCALA = 500;
+	
+	/** width dell'immagine di default */
+	private static final int FIXED_WIDTH = 1024;
+	
+	/** heigth dell'immagine di default */
+	private static final int FIXED_HEIGTH = 768;
 
 	///////////////////////////////////////////
 
 	// VARIABILI ///////////////////////
 
 	/** costo del percorso */
-	public int costo;
+	public int costo = -1;
 
 	/** stringa identificativa dell'ascensore */
 	public String ascensore;
@@ -97,9 +100,6 @@ public class Path {
 			if ((this.a != null) && (this.b != null))
 				break;
 		}
-
-		// calcolo il costo del percorso
-		this.costo = calculateWeigth(this.a, this.b, (this.ascensore.length() > 0), (this.scala.length() > 0));
 	}
 
 
@@ -121,31 +121,43 @@ public class Path {
 		this.ascensore = p.ascensore;
 		this.scala = p.scala;
 	}
-
-
-	/** Metodo per calcolare il "peso" della distanza tra due punti
+	
+	
+	/** Metodo per calcolare il "peso" della distanza tra due punti. 
+	 * Se si tratta di un ascensore o di una scala imposto i valori predefiniti, altrimenti 
+	 * provvedo a scalare le dimensioni passate (per uniformare i pesi indipendentemente dalla
+	 * dimensione delle immagini) e a calcolare la distanza lineare tra i due punti, che diventa
+	 * il nuovo peso.
 	 * 
-	 * @param a Point punto A
-	 * @param b Point punto B
-	 * @param ascensore boolean indica se è un percorso con ascensore
-	 * @param scala boolean indica se è un percorso con scala
-	 * @return int il "peso" del cammino
+	 * @param w int larghezza della mappa in pixel
+	 * @param h int altezza della mappa in pixel
+	 * 
 	 */
-	private int calculateWeigth(Point a, Point b, boolean ascensore, boolean scala) {
-
-		if (ascensore)
-			return COSTO_ASCENSORE;
-		if (scala)
-			return COSTO_SCALA;
-
-		float dx = a.posizione.x - b.posizione.y;
-		float dy = a.posizione.y - b.posizione.y;
-
-		int distance = (int)Math.sqrt( dx * dx + dy * dy);
-
-		return distance * COSTO_PER_PIXEL;
+	public void setWeight(int w, int h) {
+		
+		if (this.ascensore.length() > 0)
+			this.costo = COSTO_ASCENSORE;
+		
+		else if (this.scala.length() > 0)
+			this.costo = COSTO_SCALA;
+		
+		else {
+			
+			// calcolo i fattori di scala
+			double factor_w = FIXED_WIDTH / w;
+			double factor_h = FIXED_HEIGTH / w;
+			
+			// scalo le distanze 
+			double dx = Math.abs(a.posizione.x - b.posizione.x) * factor_w;
+			double dy = Math.abs(a.posizione.y - b.posizione.y) * factor_h;
+			
+			// calcolo la lunghezza
+			double length = Math.sqrt(dx * dx - dy * dy);
+			
+			// imposto il costo
+			this.costo = (int)length;
+		}
 	}
-
 
 
 	/** Metodo per il parsing del JSON 
