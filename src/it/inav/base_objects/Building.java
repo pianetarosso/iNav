@@ -29,6 +29,18 @@ import android.os.AsyncTask;
 
 import com.google.android.maps.GeoPoint;
 
+
+
+/** Classe per la gestione completa dell'edificio. 
+ * 
+ * <br />
+ * 
+ * Sono presenti inoltre i metodi per il parsing del JSON proveniente dal server e
+ * per il caricamento dell'edificio dal database
+ * 
+ * @author Marco Fedele
+ *
+ */
 public class Building {
 
 
@@ -50,41 +62,88 @@ public class Building {
 	public static final String DATA_U = "data_update";
 	public static final String POSIZIONE = "posizione";
 	public static final String GEOMETRIA = "geometria";
+	
+	/** Identificativo usato per quando viene effettuato il recupero di una "lista" di edifici */
+	private static final String LIST = "lista";
 	///////////////////////////////////////////////////////
 
 	// VARIABILI /////////////////////
+	
+	/** id dell'edificio, è lo stesso presente sul server */
 	public long id;
 
+	/** nome dell'edificio */
 	public String nome;
+	
+	/** descrizione */
 	public String descrizione;
 
+	/** eventuale link alla web page dell'edificio */
 	public URL link = null;
+	
+	/** link della foto, può essere sia locale che remoto */
 	public URI foto_link = null;
 
+	/** contenitore della foto */
 	public Bitmap foto;
 
+	/** numero dei piani mappati */
 	public int numero_di_piani;
+	
+	/** versione della mappa, usata in fase di update */
 	public int versione;
 
+	/** data di creazione dell'edificio (sul server) */
 	public Date data_creazione;
+	
+	/** data di update dell'edificio (sul server) */
 	public Date data_update;
 
+	/** posizione dell'edificio sulla mappa (Google Maps) */
 	public GeoPoint posizione;
+	
+	/** geometria dell'edificio sulla mappa (Google Maps) */
 	public GeoPoint[] geometria;
 	////////////////////////////////////
 
 
 	// OGGETTI /////////////////////////////////////////////
+	
+	/** Lista dei piani */
 	protected List<Floor> piani = new ArrayList<Floor>();
+	
+	/** lista dei punti */
 	protected List<Point> punti = new ArrayList<Point>();
+	
+	/** lista delle stanze */
 	protected List<Room> stanze = new ArrayList<Room>();
+	
+	/** lista dei percorsi */
 	protected List<Path> paths = new ArrayList<Path>();
 	////////////////////////////////////////////////////////
 
 	@SuppressLint("SimpleDateFormat")
+	/** Parserer della data proveniente dal server */
 	SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
 
-	// COSTRUTTORE STANDARD
+	
+	/** Costruttore dell'edificio, specifico per il caricamento dei dati dal database, 
+	 * effettua il parsing di alcuni campi più complessi
+	 * 
+	 * @param id long id dell'edificio (lo stesso presente sul server)
+	 * @param nome String nome dell'edificio
+	 * @param descrizione String (eventuale) descrizione
+	 * @param link String eventuale link ad una web page
+	 * @param foto_link String link (locale o remoto) dell'immagine dell'edificio
+	 * @param numero_di_piani int numero di piani mappati
+	 * @param versione int versione dell'edificio
+	 * @param data_creazione long data di creazione dell'edificio, in ms
+	 * @param data_update long data di update dell'edificio, in ms
+	 * @param posizione String posizione dell'edificio nel formato [latitudine,longitudine]
+	 * @param geometria String gemetria dell'edificio sulla mappa nel formato [[lat,lng,lat,lng,..]]
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
+	 */
 	public Building (long id, String nome, String descrizione, String link, String foto_link,
 			int numero_di_piani, int versione, long data_creazione,
 			long data_update, String posizione, String geometria) 
@@ -195,7 +254,16 @@ public class Building {
 	}
 	
 	
-	// Metodo per recuperare TUTTI i building dal database
+	/** Metodo per recuperare TUTTI gli edifici dal database, viene caricato SOLO il campo BUILDING, 
+	 * senza nient'altro. Per il recupero viene utilizzata un'AsyncTask {@link loadAllBuildings}
+	 * @param context Context necessario per "aprire" il database
+	 * @return List(Building)
+	 * @throws SQLException
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public static List<Building> getBuildings(Context context) 
 			throws SQLException, MalformedURLException, URISyntaxException, 
 			InterruptedException, ExecutionException {
@@ -206,6 +274,11 @@ public class Building {
         return lab.get();	
 	}
 	
+	/** AsyncTask per caricare dal database tutti gli edifici dal database. 
+	 * Viene caricato SOLO il campo BUILDING
+	 * 
+	 *@author Marco Fedele
+	 */
 	public static class loadAllBuildings extends AsyncTask <Context, Void, List<Building>> {
 
 		@Override
@@ -229,7 +302,17 @@ public class Building {
 		
 	}
 	
-	// Costruttore che esegue il parsing di un JSON
+	/** Costruttore, crea un edificio effettuando il parsing di un JSON. 
+	 * Si occupa anche di separare dal JSON i vari campi (punti, path, room, ..) e chiamare le funzioni
+	 * idonee degli altri oggetti per parsarli.
+	 * 
+	 * @param json JSONObject da parsare
+	 * @param baseLink String link di base del sito, necessario per ricostruire i link alle immagini
+	 * @throws JSONException
+	 * @throws MalformedURLException
+	 * @throws ParseException
+	 * @throws URISyntaxException
+	 */
 	public Building (JSONObject json, String baseLink) 
 			throws JSONException, MalformedURLException, ParseException, URISyntaxException {
 
@@ -258,8 +341,18 @@ public class Building {
 			this.stanze.add(Room.parse((JSONObject) rooms.get(i), this.punti));
 	}
 
-	private static final String LIST = "lista";
+	
 
+	/** Costruttore, chiamato quando il JSONObject contiene una lista di edifici
+	 * 
+	 * @param json JSONObject da parsare
+	 * @param baseLink String link di base del sito, necessario per ricostruire i link alle immagini
+	 * @return List(Building)
+	 * @throws MalformedURLException
+	 * @throws JSONException
+	 * @throws ParseException
+	 * @throws URISyntaxException
+	 */
 	public static List<Building> Buildings(JSONObject json, String baseLink) 
 			throws MalformedURLException, JSONException, ParseException, URISyntaxException {
 
@@ -273,7 +366,15 @@ public class Building {
 	}
 
 	
-	// PARSING DEL JSON
+	/** Metodo per il parsing del JSON dell'edificio. SOLO del BUILDING, di nessun'altro oggetto.
+	 * 
+	 * @param b JSONObject oggetto da parsare
+	 * @param baseLink String link di base del sito, necessario per ricostruire i link alle immagini
+	 * @throws JSONException
+	 * @throws MalformedURLException
+	 * @throws ParseException
+	 * @throws URISyntaxException
+	 */
 	private void parseBuilding(JSONObject b, String baseLink) 
 			throws JSONException, MalformedURLException, ParseException, URISyntaxException {
 
@@ -314,7 +415,15 @@ public class Building {
 	}
 
 
+	/** Metodo per liberare la memoria dalle immagini, usato per eliminare problemi di carico della memoria*/
+	public void freeMemory() {
+		foto.recycle();
+		
+		for(Floor f : piani)
+			f.immagine.recycle();
+	}
 
+	
 	public GeoPoint getPosizione() {
 		return posizione;
 	}
@@ -365,7 +474,7 @@ public class Building {
 	}
 
 
-	// ToSTRING
+	/** Metodo toString */
 	public String toString() {
 
 		String out = "Building:\n";
@@ -404,13 +513,6 @@ public class Building {
 			out += r.toString();
 
 		return out;
-	}
-
-	public void freeMemory() {
-		foto.recycle();
-		
-		for(Floor f : piani)
-			f.immagine.recycle();
 	}
 }
 
