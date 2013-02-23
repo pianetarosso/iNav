@@ -21,4 +21,6 @@
     <string name="unknown_position">Unknow position!</string>
     <string name="loading">Loading...</string>
     <string name="stop_travel_question">Do you want to stop the navigation?</string>
+    <string name="find_nearest">Find nearest</string>
+    <string name="advanced_search">Advanced search</string>
 </resources>

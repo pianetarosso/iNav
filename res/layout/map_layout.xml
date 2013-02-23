@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent" 
+    android:layout_height="fill_parent" 
+    android:id="@+id/mapLayout" 
+    android:gravity="center_vertical">
+    
+	<com.google.android.maps.MapView
+    	xmlns:android="http://schemas.android.com/apk/res/android"
+    	android:id="@+id/mapview"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+    	android:clickable="true"
+    	android:enabled="true"
+    	android:layout_centerInParent="true"
+    	android:apiKey="0Kjfsly46ccxfiiOTxjR5LtdtBmvJSfIPFDt_TA">
+	</com.google.android.maps.MapView>
+</RelativeLayout>

@@ -14,4 +14,6 @@
     <string name="people">persone</string>
     <string name="unknown_position">Posizione sconosciuta!</string>
     <string name="stop_travel_question">Vuoi interrompere la navigazione?</string>
+    <string name="find_nearest">Trova nelle vicinanze</string>
+    <string name="advanced_search">Ricerca avanzata</string>
 </resources>

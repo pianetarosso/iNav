@@ -152,7 +152,7 @@ public class Connect {
 		}
 	}
 
-	/** AsyncTask per scaricare un'edificio dal server. Gestisce anche un ProgressDialog
+	/** AsyncTask per scaricare una serie di edifici dal server. Gestisce anche un ProgressDialog
 	 * 
 	 * @author Marco Fedele
 	 *

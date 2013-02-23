@@ -95,8 +95,16 @@ public class MainActivity extends Activity {
 			}
 		});
 
+		
 		// trova un edificio online
 		search_building = (Button)this.findViewById(R.id.trova_edifici);
+		search_building.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				showSearchMethods();
+			}	
+		});
 
 
 		// visualizzo il pulsante degli edifici danneggiati solo se ce ne sono nelle SP
@@ -148,6 +156,39 @@ public class MainActivity extends Activity {
 	}
 
 
+	/** Metodo chiamato per mostrare i metodi di ricerca disponibili tramite AlertDialog:
+	 * 		- usando la propria posizione
+	 * 		- aprendo una pagina per selezionare gli edifici in base a nazione e città
+	 */
+	
+	private void showSearchMethods() {
+		
+		CharSequence[] items = new CharSequence[2];
+
+		items[0] = this.getText(R.string.find_nearest);
+		items[1] = this.getText(R.string.advanced_search);
+
+		final Context context = this;
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setItems(items, new DialogInterface.OnClickListener() {
+
+			public void onClick(DialogInterface dialog, int item) {
+
+				dialog.dismiss();
+
+				if (item==0) 
+					// faccio partire la ricerca geografica
+					context.startActivity(new Intent(context, MapSearch.class));
+				else
+					// ricerca avanzata, basata su selezione della nazione -> città
+					context.startActivity(new Intent(context, Navigator.class));
+			}
+		}).show();
+	}
+	
+	
+	
 	/** Testo se il dispositivo è connesso, e abilito/disabilito alcuni pulsanti di conseguenza.
 	 *  Se non è presente una connessione, ne informo l'utente con un Toast
 	*/
